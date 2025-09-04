@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	cMinPasswordLen = 10
+	cMinPasswordLen = 8
 )
 
 func GetProtoUser(
