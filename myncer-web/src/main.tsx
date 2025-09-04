@@ -9,7 +9,7 @@ import { ThemeProvider } from './components/ThemeProvider.tsx'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { Toaster } from 'sonner'
 
-const GRPC_SERVER_URL = import.meta.env.VITE_GRPC_BASE_URL || 'https://myncer-api.hansbala.com'
+const GRPC_SERVER_URL = ""
 
 const queryClient = new QueryClient()
 const connectTransport = createConnectTransport({

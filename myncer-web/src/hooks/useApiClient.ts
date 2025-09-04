@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { Configuration, DefaultApi } from "../generated_api/src"
 
-const BASE_PATH = import.meta.env.VITE_API_BASE_URL || 'https://myncer-api.hansbala.com/api/v1'
+const BASE_PATH = '/api/v1'
 
 /**
  * @deprecated Use grpc methods instead.

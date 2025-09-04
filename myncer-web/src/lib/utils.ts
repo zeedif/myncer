@@ -2,6 +2,7 @@ import { Datasource } from "@/generated_grpc/myncer/datasource_pb"
 import type { Timestamp } from "@bufbuild/protobuf/wkt"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import config from "@/config"
 
 const spotifyScopes = [
   "user-read-email",
@@ -21,8 +22,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const getSpotifyAuthUrl = () => {
-  const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID
-  const redirectUri = encodeURIComponent(import.meta.env.VITE_SPOTIFY_REDIRECT_URI)
+  const clientId = config.spotifyClientId
+  const redirectUri = encodeURIComponent(config.spotifyRedirectUri)
   const scope = encodeURIComponent(spotifyScopes)
   const state = crypto.randomUUID() // CSRF protection.
 
@@ -30,8 +31,8 @@ export const getSpotifyAuthUrl = () => {
 }
 
 export const getYoutubeAuthUrl = () => {
-  const clientId = import.meta.env.VITE_YOUTUBE_CLIENT_ID
-  const redirectUri = encodeURIComponent(import.meta.env.VITE_YOUTUBE_REDIRECT_URI)
+  const clientId = config.youtubeClientId
+  const redirectUri = encodeURIComponent(config.youtubeRedirectUri)
   const scope = encodeURIComponent(youtubeScopes)
   const state = crypto.randomUUID() // CSRF protection
 

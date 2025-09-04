@@ -1,0 +1,52 @@
+services:
+  # --- Database Configuration Notes ---
+  # The 'db' service below is for local development only.
+  # The production environment is configured to use a managed Google Cloud SQL instance.
+  db:
+    image: postgres:15-alpine
+    container_name: postgres-db-container
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # To initialize the DB with a schema on first run, uncomment the line below.
+      # The postgres image automatically runs any .sql files in /docker-entrypoint-initdb.d
+      # - ./server/core/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: unless-stopped
+    env_file:
+      - .env
+    healthcheck:
+      # Command to check if postgres is ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  server:
+    build:
+      context: ../server
+      dockerfile: server.Dockerfile
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      db:
+        # Wait for the healthcheck to pass before starting the server
+        condition: service_healthy
+    env_file:
+      - .env
+
+  web:
+    build:
+      context: ../myncer-web
+      dockerfile: web.Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - server
+    env_file:
+      - .env
+
+volumes:
+  pgdata:
