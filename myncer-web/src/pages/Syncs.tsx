@@ -1,4 +1,5 @@
 import { CreateOneWaySyncDialog } from "@/components/CreateOneWaySyncDialog"
+import { CreateMergeSyncDialog } from "@/components/CreateMergeSyncDialog"
 import { PageWrapper } from "@/components/PageWrapper"
 import { SyncRender } from "@/components/Sync"
 import { PageLoader } from "@/components/ui/page-loader"
@@ -19,7 +20,10 @@ export const Syncs = () => {
               Manage your data synchronization settings.
             </p>
           </div>
-          <CreateOneWaySyncDialog />
+          <div className="flex gap-2">
+            <CreateOneWaySyncDialog />
+            <CreateMergeSyncDialog />
+          </div>
         </div>
 
         <div className="space-y-4">

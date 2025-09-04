@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Loader2, Trash2 } from "lucide-react"
 import { OneWaySyncRender } from "./OneWaySyncRender"
+import { PlaylistMergeSyncRender } from "./PlaylistMergeSyncRender"
 import { useDeleteSync } from "@/hooks/useDeleteSync"
 import { useRunSync } from "@/hooks/useRunSync"
 import { SyncStatus, type Sync } from "@/generated_grpc/myncer/sync_pb"
@@ -20,6 +21,8 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
     switch (syncVariant.case) {
       case "oneWaySync":
         return "One-Way"
+      case "playlistMergeSync":
+        return "Playlist Merge"
       default:
         return "Unknown"
     }
@@ -38,6 +41,9 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
       <div className="mb-8">
         {syncVariant.case === "oneWaySync" && (
           <OneWaySyncRender sync={syncVariant.value} />
+        )}
+        {syncVariant.case === "playlistMergeSync" && (
+          <PlaylistMergeSyncRender sync={syncVariant.value} />
         )}
       </div>
 

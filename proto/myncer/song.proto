@@ -16,5 +16,6 @@ message Song {
   myncer.Datasource datasource = 4;
   // Unique, stable song identifier for the datasource.
   string datasource_song_id = 5;
-  // next: 7
+  string isrc = 7;
+  // next: 8
 }

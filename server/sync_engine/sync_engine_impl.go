@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hansbala/myncer/core"
+	"github.com/hansbala/myncer/matching"
 	myncer_pb "github.com/hansbala/myncer/proto/myncer"
 )
 
@@ -35,18 +36,18 @@ func (s *syncEngineImpl) RunSync(
 
 	// Run the sync.
 	var err error = nil
-	switch sync.GetSyncVariant().(type) {
+	switch v := sync.GetSyncVariant().(type) {
 	case *myncer_pb.Sync_OneWaySync:
-		if err = s.runOneWaySync(
-			ctx,
-			userInfo,
-			sync.GetOneWaySync(),
-		); err != nil {
+		if err = s.runOneWaySync(ctx, userInfo, v.OneWaySync); err != nil {
 			err = core.WrappedError(err, "failed to run one-way sync")
+		}
+	case *myncer_pb.Sync_PlaylistMergeSync:
+		if err = s.runPlaylistMergeSync(ctx, userInfo, v.PlaylistMergeSync); err != nil {
+			err = core.WrappedError(err, "failed to run playlist merge sync")
 		}
 	default:
 		// We should never reach here if the sync was validated correctly.
-		err = core.NewError(fmt.Sprintf("unreachble: unknown sync variant: %T", sync.GetSyncVariant()))
+		err = core.NewError(fmt.Sprintf("unreachable: unknown sync variant: %T", sync.GetSyncVariant()))
 	}
 
 	// Update the status of the sync run in the database.
@@ -92,8 +93,10 @@ func (s *syncEngineImpl) validateSync(sync *myncer_pb.Sync /*const*/) error {
 	switch sync.GetSyncVariant().(type) {
 	case *myncer_pb.Sync_OneWaySync:
 		return nil
+	case *myncer_pb.Sync_PlaylistMergeSync:
+		return nil
 	default:
-		return core.NewError(fmt.Sprintf("unknown sync variant: %T", sync.GetOneWaySync()))
+		return core.NewError(fmt.Sprintf("unknown sync variant: %T", sync.GetSyncVariant()))
 	}
 }
 
@@ -205,4 +208,60 @@ func (s *syncEngineImpl) getClient(
 	default:
 		return nil, core.NewError("unsupported datasource: %v", datasource)
 	}
+}
+
+func (s *syncEngineImpl) runPlaylistMergeSync(
+	ctx context.Context,
+	userInfo *myncer_pb.User, /*const*/
+	sync *myncer_pb.PlaylistMergeSync, /*const*/
+) error {
+	allSongs := []core.Song{}
+
+	// 1. Collect songs from all sources
+	for _, source := range sync.GetSources() {
+		sourceClient, err := s.getClient(ctx, source.GetDatasource())
+		if err != nil {
+			return core.WrappedError(err, "failed to get source client for datasource %v", source.GetDatasource())
+		}
+		songs, err := sourceClient.GetPlaylistSongs(ctx, userInfo, source.GetPlaylistId())
+		if err != nil {
+			core.Warningf("Could not fetch songs from playlist %s, skipping.", source.GetPlaylistId())
+			continue
+		}
+		allSongs = append(allSongs, songs...)
+	}
+
+	// 2. Remove duplicates (decoupled logic)
+	uniqueSongs, err := matching.DeduplicateSongs(allSongs, 90.0) // 90.0 is the similarity threshold
+	if err != nil {
+		return core.WrappedError(err, "failed to deduplicate songs")
+	}
+
+	// 3. Get destination client
+	destClient, err := s.getClient(ctx, sync.GetDestination().GetDatasource())
+	if err != nil {
+		return core.WrappedError(err, "failed to get destination client")
+	}
+
+	destPlaylistId := sync.GetDestination().GetPlaylistId()
+
+	// 4. (Optional) Clear destination playlist
+	if sync.GetOverwriteExisting() {
+		if err := destClient.ClearPlaylist(ctx, userInfo, destPlaylistId); err != nil {
+			return core.WrappedError(err, "failed to clear destination playlist")
+		}
+	}
+	
+	// 5. Add songs to destination list
+	// You may need to search for each song on the destination platform first.
+	searchedSongs, err := s.getSearchedSongs(ctx, userInfo, uniqueSongs, sync.GetDestination().GetDatasource())
+	if err != nil {
+		return core.WrappedError(err, "failed to search for songs on destination platform")
+	}
+
+	if err := destClient.AddToPlaylist(ctx, userInfo, destPlaylistId, searchedSongs); err != nil {
+		return core.WrappedError(err, "failed to add songs to destination playlist")
+	}
+
+	return nil
 }

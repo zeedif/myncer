@@ -14,7 +14,36 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file myncer/sync.proto.
  */
 export const file_myncer_sync: GenFile = /*@__PURE__*/
-  fileDesc("ChFteW5jZXIvc3luYy5wcm90bxIGbXluY2VyIr8BCgRTeW5jEgoKAmlkGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSLgoKY3JlYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKdXBkYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASKgoMb25lX3dheV9zeW5jGAUgASgLMhIubXluY2VyLk9uZVdheVN5bmNIAEIOCgxzeW5jX3ZhcmlhbnQiswEKB1N5bmNSdW4SDwoHc3luY19pZBgBIAEoCRIOCgZydW5faWQYAiABKAkSJwoLc3luY19zdGF0dXMYAyABKA4yEi5teW5jZXIuU3luY1N0YXR1cxIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJ3CgpPbmVXYXlTeW5jEiMKBnNvdXJjZRgBIAEoCzITLm15bmNlci5NdXNpY1NvdXJjZRIoCgtkZXN0aW5hdGlvbhgCIAEoCzITLm15bmNlci5NdXNpY1NvdXJjZRIaChJvdmVyd3JpdGVfZXhpc3RpbmcYAyABKAgiTwoRQ3JlYXRlU3luY1JlcXVlc3QSKgoMb25lX3dheV9zeW5jGAEgASgLMhIubXluY2VyLk9uZVdheVN5bmNIAEIOCgxzeW5jX3ZhcmlhbnQiMAoSQ3JlYXRlU3luY1Jlc3BvbnNlEhoKBHN5bmMYASABKAsyDC5teW5jZXIuU3luYyIkChFEZWxldGVTeW5jUmVxdWVzdBIPCgdzeW5jX2lkGAEgASgJIiUKEkRlbGV0ZVN5bmNSZXNwb25zZRIPCgdzeW5jX2lkGAEgASgJIhIKEExpc3RTeW5jc1JlcXVlc3QiMAoRTGlzdFN5bmNzUmVzcG9uc2USGwoFc3luY3MYASADKAsyDC5teW5jZXIuU3luYyIhCg5HZXRTeW5jUmVxdWVzdBIPCgdzeW5jX2lkGAEgASgJIi0KD0dldFN5bmNSZXNwb25zZRIaCgRzeW5jGAEgASgLMgwubXluY2VyLlN5bmMiIQoOUnVuU3luY1JlcXVlc3QSDwoHc3luY19pZBgBIAEoCSJdCg9SdW5TeW5jUmVzcG9uc2USDwoHc3luY19pZBgBIAEoCRIiCgZzdGF0dXMYAiABKA4yEi5teW5jZXIuU3luY1N0YXR1cxIVCg1lcnJvcl9tZXNzYWdlGAMgASgJIhUKE0xpc3RTeW5jUnVuc1JlcXVlc3QiOgoUTGlzdFN5bmNSdW5zUmVzcG9uc2USIgoJc3luY19ydW5zGAEgAygLMg8ubXluY2VyLlN5bmNSdW4qqQEKClN5bmNTdGF0dXMSGwoXU1lOQ19TVEFUVVNfVU5TUEVDSUZJRUQQABIXChNTWU5DX1NUQVRVU19QRU5ESU5HEAESFwoTU1lOQ19TVEFUVVNfUlVOTklORxACEhkKFVNZTkNfU1RBVFVTX0NPTVBMRVRFRBADEhYKElNZTkNfU1RBVFVTX0ZBSUxFRBAEEhkKFVNZTkNfU1RBVFVTX0NBTkNFTExFRBAFMpwDCgtTeW5jU2VydmljZRJDCgpDcmVhdGVTeW5jEhkubXluY2VyLkNyZWF0ZVN5bmNSZXF1ZXN0GhoubXluY2VyLkNyZWF0ZVN5bmNSZXNwb25zZRJDCgpEZWxldGVTeW5jEhkubXluY2VyLkRlbGV0ZVN5bmNSZXF1ZXN0GhoubXluY2VyLkRlbGV0ZVN5bmNSZXNwb25zZRJACglMaXN0U3luY3MSGC5teW5jZXIuTGlzdFN5bmNzUmVxdWVzdBoZLm15bmNlci5MaXN0U3luY3NSZXNwb25zZRI6CgdHZXRTeW5jEhYubXluY2VyLkdldFN5bmNSZXF1ZXN0GhcubXluY2VyLkdldFN5bmNSZXNwb25zZRI6CgdSdW5TeW5jEhYubXluY2VyLlJ1blN5bmNSZXF1ZXN0GhcubXluY2VyLlJ1blN5bmNSZXNwb25zZRJJCgxMaXN0U3luY1J1bnMSGy5teW5jZXIuTGlzdFN5bmNSdW5zUmVxdWVzdBocLm15bmNlci5MaXN0U3luY1J1bnNSZXNwb25zZUIzWjFnaXRodWIuY29tL2hhbnNiYWxhL215bmNlci9wcm90by9teW5jZXI7bXluY2VyX3BiYgZwcm90bzM", [file_google_protobuf_timestamp, file_myncer_datasource]);
+  fileDesc("ChFteW5jZXIvc3luYy5wcm90bxIGbXluY2VyIn8KEVBsYXlsaXN0TWVyZ2VTeW5jEiQKB3NvdXJjZXMYASADKAsyEy5teW5jZXIuTXVzaWNTb3VyY2USKAoLZGVzdGluYXRpb24YAiABKAsyEy5teW5jZXIuTXVzaWNTb3VyY2USGgoSb3ZlcndyaXRlX2V4aXN0aW5nGAMgASgIIvkBCgRTeW5jEgoKAmlkGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSLgoKY3JlYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKdXBkYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASKgoMb25lX3dheV9zeW5jGAUgASgLMhIubXluY2VyLk9uZVdheVN5bmNIABI4ChNwbGF5bGlzdF9tZXJnZV9zeW5jGAYgASgLMhkubXluY2VyLlBsYXlsaXN0TWVyZ2VTeW5jSABCDgoMc3luY192YXJpYW50IrMBCgdTeW5jUnVuEg8KB3N5bmNfaWQYASABKAkSDgoGcnVuX2lkGAIgASgJEicKC3N5bmNfc3RhdHVzGAMgASgOMhIubXluY2VyLlN5bmNTdGF0dXMSLgoKY3JlYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKdXBkYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAidwoKT25lV2F5U3luYxIjCgZzb3VyY2UYASABKAsyEy5teW5jZXIuTXVzaWNTb3VyY2USKAoLZGVzdGluYXRpb24YAiABKAsyEy5teW5jZXIuTXVzaWNTb3VyY2USGgoSb3ZlcndyaXRlX2V4aXN0aW5nGAMgASgIIokBChFDcmVhdGVTeW5jUmVxdWVzdBIqCgxvbmVfd2F5X3N5bmMYASABKAsyEi5teW5jZXIuT25lV2F5U3luY0gAEjgKE3BsYXlsaXN0X21lcmdlX3N5bmMYAiABKAsyGS5teW5jZXIuUGxheWxpc3RNZXJnZVN5bmNIAEIOCgxzeW5jX3ZhcmlhbnQiMAoSQ3JlYXRlU3luY1Jlc3BvbnNlEhoKBHN5bmMYASABKAsyDC5teW5jZXIuU3luYyIkChFEZWxldGVTeW5jUmVxdWVzdBIPCgdzeW5jX2lkGAEgASgJIiUKEkRlbGV0ZVN5bmNSZXNwb25zZRIPCgdzeW5jX2lkGAEgASgJIhIKEExpc3RTeW5jc1JlcXVlc3QiMAoRTGlzdFN5bmNzUmVzcG9uc2USGwoFc3luY3MYASADKAsyDC5teW5jZXIuU3luYyIhCg5HZXRTeW5jUmVxdWVzdBIPCgdzeW5jX2lkGAEgASgJIi0KD0dldFN5bmNSZXNwb25zZRIaCgRzeW5jGAEgASgLMgwubXluY2VyLlN5bmMiIQoOUnVuU3luY1JlcXVlc3QSDwoHc3luY19pZBgBIAEoCSJdCg9SdW5TeW5jUmVzcG9uc2USDwoHc3luY19pZBgBIAEoCRIiCgZzdGF0dXMYAiABKA4yEi5teW5jZXIuU3luY1N0YXR1cxIVCg1lcnJvcl9tZXNzYWdlGAMgASgJIhUKE0xpc3RTeW5jUnVuc1JlcXVlc3QiOgoUTGlzdFN5bmNSdW5zUmVzcG9uc2USIgoJc3luY19ydW5zGAEgAygLMg8ubXluY2VyLlN5bmNSdW4qqQEKClN5bmNTdGF0dXMSGwoXU1lOQ19TVEFUVVNfVU5TUEVDSUZJRUQQABIXChNTWU5DX1NUQVRVU19QRU5ESU5HEAESFwoTU1lOQ19TVEFUVVNfUlVOTklORxACEhkKFVNZTkNfU1RBVFVTX0NPTVBMRVRFRBADEhYKElNZTkNfU1RBVFVTX0ZBSUxFRBAEEhkKFVNZTkNfU1RBVFVTX0NBTkNFTExFRBAFMpwDCgtTeW5jU2VydmljZRJDCgpDcmVhdGVTeW5jEhkubXluY2VyLkNyZWF0ZVN5bmNSZXF1ZXN0GhoubXluY2VyLkNyZWF0ZVN5bmNSZXNwb25zZRJDCgpEZWxldGVTeW5jEhkubXluY2VyLkRlbGV0ZVN5bmNSZXF1ZXN0GhoubXluY2VyLkRlbGV0ZVN5bmNSZXNwb25zZRJACglMaXN0U3luY3MSGC5teW5jZXIuTGlzdFN5bmNzUmVxdWVzdBoZLm15bmNlci5MaXN0U3luY3NSZXNwb25zZRI6CgdHZXRTeW5jEhYubXluY2VyLkdldFN5bmNSZXF1ZXN0GhcubXluY2VyLkdldFN5bmNSZXNwb25zZRI6CgdSdW5TeW5jEhYubXluY2VyLlJ1blN5bmNSZXF1ZXN0GhcubXluY2VyLlJ1blN5bmNSZXNwb25zZRJJCgxMaXN0U3luY1J1bnMSGy5teW5jZXIuTGlzdFN5bmNSdW5zUmVxdWVzdBocLm15bmNlci5MaXN0U3luY1J1bnNSZXNwb25zZUIzWjFnaXRodWIuY29tL2hhbnNiYWxhL215bmNlci9wcm90by9teW5jZXI7bXluY2VyX3BiYgZwcm90bzM", [file_google_protobuf_timestamp, file_myncer_datasource]);
+
+/**
+ * Representative of multiple sources -> one destination.
+ *
+ * @generated from message myncer.PlaylistMergeSync
+ */
+export type PlaylistMergeSync = Message<"myncer.PlaylistMergeSync"> & {
+  /**
+   * @generated from field: repeated myncer.MusicSource sources = 1;
+   */
+  sources: MusicSource[];
+
+  /**
+   * @generated from field: myncer.MusicSource destination = 2;
+   */
+  destination?: MusicSource;
+
+  /**
+   * @generated from field: bool overwrite_existing = 3;
+   */
+  overwriteExisting: boolean;
+};
+
+/**
+ * Describes the message myncer.PlaylistMergeSync.
+ * Use `create(PlaylistMergeSyncSchema)` to create a new message.
+ */
+export const PlaylistMergeSyncSchema: GenMessage<PlaylistMergeSync> = /*@__PURE__*/
+  messageDesc(file_myncer_sync, 0);
 
 /**
  * @generated from message myncer.Sync
@@ -57,6 +86,12 @@ export type Sync = Message<"myncer.Sync"> & {
      */
     value: OneWaySync;
     case: "oneWaySync";
+  } | {
+    /**
+     * @generated from field: myncer.PlaylistMergeSync playlist_merge_sync = 6;
+     */
+    value: PlaylistMergeSync;
+    case: "playlistMergeSync";
   } | { case: undefined; value?: undefined };
 };
 
@@ -65,7 +100,7 @@ export type Sync = Message<"myncer.Sync"> & {
  * Use `create(SyncSchema)` to create a new message.
  */
 export const SyncSchema: GenMessage<Sync> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 0);
+  messageDesc(file_myncer_sync, 1);
 
 /**
  * @generated from message myncer.SyncRun
@@ -111,7 +146,7 @@ export type SyncRun = Message<"myncer.SyncRun"> & {
  * Use `create(SyncRunSchema)` to create a new message.
  */
 export const SyncRunSchema: GenMessage<SyncRun> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 1);
+  messageDesc(file_myncer_sync, 2);
 
 /**
  * Representative of source -> destination.
@@ -145,7 +180,7 @@ export type OneWaySync = Message<"myncer.OneWaySync"> & {
  * Use `create(OneWaySyncSchema)` to create a new message.
  */
 export const OneWaySyncSchema: GenMessage<OneWaySync> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 2);
+  messageDesc(file_myncer_sync, 3);
 
 /**
  * @generated from message myncer.CreateSyncRequest
@@ -162,6 +197,12 @@ export type CreateSyncRequest = Message<"myncer.CreateSyncRequest"> & {
      */
     value: OneWaySync;
     case: "oneWaySync";
+  } | {
+    /**
+     * @generated from field: myncer.PlaylistMergeSync playlist_merge_sync = 2;
+     */
+    value: PlaylistMergeSync;
+    case: "playlistMergeSync";
   } | { case: undefined; value?: undefined };
 };
 
@@ -170,7 +211,7 @@ export type CreateSyncRequest = Message<"myncer.CreateSyncRequest"> & {
  * Use `create(CreateSyncRequestSchema)` to create a new message.
  */
 export const CreateSyncRequestSchema: GenMessage<CreateSyncRequest> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 3);
+  messageDesc(file_myncer_sync, 4);
 
 /**
  * @generated from message myncer.CreateSyncResponse
@@ -189,7 +230,7 @@ export type CreateSyncResponse = Message<"myncer.CreateSyncResponse"> & {
  * Use `create(CreateSyncResponseSchema)` to create a new message.
  */
 export const CreateSyncResponseSchema: GenMessage<CreateSyncResponse> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 4);
+  messageDesc(file_myncer_sync, 5);
 
 /**
  * @generated from message myncer.DeleteSyncRequest
@@ -208,7 +249,7 @@ export type DeleteSyncRequest = Message<"myncer.DeleteSyncRequest"> & {
  * Use `create(DeleteSyncRequestSchema)` to create a new message.
  */
 export const DeleteSyncRequestSchema: GenMessage<DeleteSyncRequest> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 5);
+  messageDesc(file_myncer_sync, 6);
 
 /**
  * @generated from message myncer.DeleteSyncResponse
@@ -227,7 +268,7 @@ export type DeleteSyncResponse = Message<"myncer.DeleteSyncResponse"> & {
  * Use `create(DeleteSyncResponseSchema)` to create a new message.
  */
 export const DeleteSyncResponseSchema: GenMessage<DeleteSyncResponse> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 6);
+  messageDesc(file_myncer_sync, 7);
 
 /**
  * @generated from message myncer.ListSyncsRequest
@@ -240,7 +281,7 @@ export type ListSyncsRequest = Message<"myncer.ListSyncsRequest"> & {
  * Use `create(ListSyncsRequestSchema)` to create a new message.
  */
 export const ListSyncsRequestSchema: GenMessage<ListSyncsRequest> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 7);
+  messageDesc(file_myncer_sync, 8);
 
 /**
  * @generated from message myncer.ListSyncsResponse
@@ -259,7 +300,7 @@ export type ListSyncsResponse = Message<"myncer.ListSyncsResponse"> & {
  * Use `create(ListSyncsResponseSchema)` to create a new message.
  */
 export const ListSyncsResponseSchema: GenMessage<ListSyncsResponse> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 8);
+  messageDesc(file_myncer_sync, 9);
 
 /**
  * @generated from message myncer.GetSyncRequest
@@ -278,7 +319,7 @@ export type GetSyncRequest = Message<"myncer.GetSyncRequest"> & {
  * Use `create(GetSyncRequestSchema)` to create a new message.
  */
 export const GetSyncRequestSchema: GenMessage<GetSyncRequest> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 9);
+  messageDesc(file_myncer_sync, 10);
 
 /**
  * @generated from message myncer.GetSyncResponse
@@ -297,7 +338,7 @@ export type GetSyncResponse = Message<"myncer.GetSyncResponse"> & {
  * Use `create(GetSyncResponseSchema)` to create a new message.
  */
 export const GetSyncResponseSchema: GenMessage<GetSyncResponse> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 10);
+  messageDesc(file_myncer_sync, 11);
 
 /**
  * @generated from message myncer.RunSyncRequest
@@ -316,7 +357,7 @@ export type RunSyncRequest = Message<"myncer.RunSyncRequest"> & {
  * Use `create(RunSyncRequestSchema)` to create a new message.
  */
 export const RunSyncRequestSchema: GenMessage<RunSyncRequest> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 11);
+  messageDesc(file_myncer_sync, 12);
 
 /**
  * @generated from message myncer.RunSyncResponse
@@ -347,7 +388,7 @@ export type RunSyncResponse = Message<"myncer.RunSyncResponse"> & {
  * Use `create(RunSyncResponseSchema)` to create a new message.
  */
 export const RunSyncResponseSchema: GenMessage<RunSyncResponse> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 12);
+  messageDesc(file_myncer_sync, 13);
 
 /**
  * @generated from message myncer.ListSyncRunsRequest
@@ -360,7 +401,7 @@ export type ListSyncRunsRequest = Message<"myncer.ListSyncRunsRequest"> & {
  * Use `create(ListSyncRunsRequestSchema)` to create a new message.
  */
 export const ListSyncRunsRequestSchema: GenMessage<ListSyncRunsRequest> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 13);
+  messageDesc(file_myncer_sync, 14);
 
 /**
  * @generated from message myncer.ListSyncRunsResponse
@@ -379,7 +420,7 @@ export type ListSyncRunsResponse = Message<"myncer.ListSyncRunsResponse"> & {
  * Use `create(ListSyncRunsResponseSchema)` to create a new message.
  */
 export const ListSyncRunsResponseSchema: GenMessage<ListSyncRunsResponse> = /*@__PURE__*/
-  messageDesc(file_myncer_sync, 14);
+  messageDesc(file_myncer_sync, 15);
 
 /**
  * @generated from enum myncer.SyncStatus

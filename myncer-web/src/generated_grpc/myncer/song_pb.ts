@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file myncer/song.proto.
  */
 export const file_myncer_song: GenFile = /*@__PURE__*/
-  fileDesc("ChFteW5jZXIvc29uZy5wcm90bxIGbXluY2VyIo0BCgRTb25nEgoKAmlkGAYgASgJEgwKBG5hbWUYASABKAkSEwoLYXJ0aXN0X25hbWUYAiADKAkSEgoKYWxidW1fbmFtZRgDIAEoCRImCgpkYXRhc291cmNlGAQgASgOMhIubXluY2VyLkRhdGFzb3VyY2USGgoSZGF0YXNvdXJjZV9zb25nX2lkGAUgASgJQjNaMWdpdGh1Yi5jb20vaGFuc2JhbGEvbXluY2VyL3Byb3RvL215bmNlcjtteW5jZXJfcGJiBnByb3RvMw", [file_myncer_datasource]);
+  fileDesc("ChFteW5jZXIvc29uZy5wcm90bxIGbXluY2VyIpsBCgRTb25nEgoKAmlkGAYgASgJEgwKBG5hbWUYASABKAkSEwoLYXJ0aXN0X25hbWUYAiADKAkSEgoKYWxidW1fbmFtZRgDIAEoCRImCgpkYXRhc291cmNlGAQgASgOMhIubXluY2VyLkRhdGFzb3VyY2USGgoSZGF0YXNvdXJjZV9zb25nX2lkGAUgASgJEgwKBGlzcmMYByABKAlCM1oxZ2l0aHViLmNvbS9oYW5zYmFsYS9teW5jZXIvcHJvdG8vbXluY2VyO215bmNlcl9wYmIGcHJvdG8z", [file_myncer_datasource]);
 
 /**
  * @generated from message myncer.Song
@@ -49,11 +49,16 @@ export type Song = Message<"myncer.Song"> & {
   /**
    * Unique, stable song identifier for the datasource.
    *
-   * next: 7
-   *
    * @generated from field: string datasource_song_id = 5;
    */
   datasourceSongId: string;
+
+  /**
+   * next: 8
+   *
+   * @generated from field: string isrc = 7;
+   */
+  isrc: string;
 };
 
 /**

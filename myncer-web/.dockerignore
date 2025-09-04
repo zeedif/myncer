@@ -1,0 +1,14 @@
+# Ignore Node dependencies, they will be installed inside the container
+node_modules
+
+# Ignore local build folder, it will be generated inside the container
+dist
+
+# Ignore local environment files
+.env*
+
+# Ignore development tools caches and logs
+.vite
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

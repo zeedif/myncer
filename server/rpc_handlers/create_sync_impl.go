@@ -66,6 +66,8 @@ func (cs *createSyncImpl) validateRequest(
 	switch syncVariant.(type) {
 	case *myncer_pb.CreateSyncRequest_OneWaySync:
 		return validateOneWaySync(ctx, userInfo, req.GetOneWaySync())
+	case *myncer_pb.CreateSyncRequest_PlaylistMergeSync:
+		return validatePlaylistMergeSync(ctx, userInfo, req.GetPlaylistMergeSync())
 	default:
 		return core.NewError("unknown sync type in validate request: %T", syncVariant)
 	}
@@ -79,6 +81,8 @@ func (cs *createSyncImpl) createSyncFromRequest(
 	switch syncVariant.(type) {
 	case *myncer_pb.CreateSyncRequest_OneWaySync:
 		return NewSync_OneWaySync(userInfo.GetId(), req.GetOneWaySync()), nil
+	case *myncer_pb.CreateSyncRequest_PlaylistMergeSync:
+		return NewSync_PlaylistMergeSync(userInfo.GetId(), req.GetPlaylistMergeSync()), nil
 	default:
 		return nil, core.NewError("unknown sync type in create sync from request: %T", syncVariant)
 	}
@@ -129,6 +133,67 @@ func NewSync_OneWaySync(
 		UserId: userId,
 		SyncVariant: &myncer_pb.Sync_OneWaySync{
 			OneWaySync: oneWaySync,
+		},
+	}
+}
+
+func validatePlaylistMergeSync(
+	ctx context.Context,
+	userInfo *myncer_pb.User, /*const*/
+	req *myncer_pb.PlaylistMergeSync, /*const*/
+) error {
+	// Validate that there are at least two sources
+	if len(req.GetSources()) < 2 {
+		return core.NewError("at least two source playlists are required for a merge sync")
+	}
+	
+	// Validate the destination
+	if req.GetDestination().GetDatasource() == myncer_pb.Datasource_DATASOURCE_UNSPECIFIED {
+		return core.NewError("destination datasource must be specified")
+	}
+	if len(req.GetDestination().GetPlaylistId()) == 0 {
+		return core.NewError("destination playlist id must be specified")
+	}
+	
+	// Get user's connected datasources
+	connectedDatasources, err := core.ToMyncerCtx(ctx).DB.DatasourceTokenStore.GetConnectedDatasources(
+		ctx,
+		userInfo.GetId(),
+	)
+	if err != nil {
+		return core.WrappedError(err, "failed to get connected datasources for user")
+	}
+	
+	// Validate that the destination is connected
+	if !connectedDatasources.Contains(req.GetDestination().GetDatasource()) {
+		return core.NewError("destination datasource is not connected")
+	}
+	
+	// Validate each source
+	for i, source := range req.GetSources() {
+		if source.GetDatasource() == myncer_pb.Datasource_DATASOURCE_UNSPECIFIED {
+			return core.NewError("source datasource %d must be specified", i+1)
+		}
+		if len(source.GetPlaylistId()) == 0 {
+			return core.NewError("source playlist id %d must be specified", i+1)
+		}
+		if !connectedDatasources.Contains(source.GetDatasource()) {
+			return core.NewError("source datasource %d is not connected", i+1)
+		}
+	}
+	
+	return nil
+}
+
+func NewSync_PlaylistMergeSync(
+	userId string, /*const*/
+	mergeSync *myncer_pb.PlaylistMergeSync, /*const*/
+) *myncer_pb.Sync {
+	return &myncer_pb.Sync{
+		Id:     uuid.NewString(),
+		UserId: userId,
+		SyncVariant: &myncer_pb.Sync_PlaylistMergeSync{
+			PlaylistMergeSync: mergeSync,
 		},
 	}
 }

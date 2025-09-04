@@ -16,6 +16,13 @@ service SyncService {
   rpc ListSyncRuns(ListSyncRunsRequest) returns (ListSyncRunsResponse);
 }
 
+// Representative of multiple sources -> one destination.
+message PlaylistMergeSync {
+  repeated MusicSource sources = 1;
+  MusicSource destination = 2;
+  bool overwrite_existing = 3;
+}
+
 message Sync {
   // google/uuid generated UUID.
   string id = 1;
@@ -27,8 +34,9 @@ message Sync {
   // Holds the actual sync data.
   oneof sync_variant {
     OneWaySync one_way_sync = 5;
+    PlaylistMergeSync playlist_merge_sync = 6;
   }
-  // next: 6
+  // next: 7
 }
 
 message SyncRun {
@@ -58,6 +66,7 @@ message CreateSyncRequest {
   // The sync to create.
   oneof sync_variant {
     OneWaySync one_way_sync = 1;
+    PlaylistMergeSync playlist_merge_sync = 2;
   }
 }
 
