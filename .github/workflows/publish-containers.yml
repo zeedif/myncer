@@ -22,7 +22,7 @@ jobs:
       - name: Build and publish container image for myncer-server
         uses: macbre/push-to-ghcr@master
         with:
-          image_name: myncer-server
+          image_name: ${{ github.repository_owner }}/myncer-server
           context: server
           dockerfile: server/server.Dockerfile
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -34,7 +34,7 @@ jobs:
       - name: Build and publish container image for myncer-web
         uses: macbre/push-to-ghcr@master
         with:
-          image_name: myncer-web
+          image_name: ${{ github.repository_owner }}/myncer-web
           context: myncer-web
           dockerfile: myncer-web/web.Dockerfile
           github_token: ${{ secrets.GITHUB_TOKEN }}
