@@ -73,8 +73,9 @@ export const getYoutubeAuthUrl = () => {
 
 export const getTidalAuthUrl = async (): Promise<string> => {
   const clientId = config.tidalClientId
-  const redirectUri = encodeURIComponent(config.tidalRedirectUri)
-  const scope = encodeURIComponent(tidalScopes)
+  // NO codificar aquí - URLSearchParams lo hará
+  const redirectUri = config.tidalRedirectUri
+  const scope = tidalScopes
   const state = crypto.randomUUID()
 
   // PKCE logic (required by Tidal)
