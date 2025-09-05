@@ -35,6 +35,7 @@ var _ core.DatasourceClient = (*youtubeClientImpl)(nil)
 func (c *youtubeClientImpl) ExchangeCodeForToken(
 	ctx context.Context,
 	code string,
+	codeVerifier string,
 ) (*oauth2.Token, error) {
 	conf := c.getOAuthConfig(ctx)
 	tok, err := conf.Exchange(ctx, code)

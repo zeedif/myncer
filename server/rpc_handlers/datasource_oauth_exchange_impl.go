@@ -49,21 +49,21 @@ func (do *datasourceOAuthExchangeImpl) ProcessRequest(
 	dsClients := core.ToMyncerCtx(ctx).DatasourceClients
 	switch reqBody.GetDatasource() {
 	case myncer_pb.Datasource_DATASOURCE_SPOTIFY:
-		token, err = dsClients.SpotifyClient.ExchangeCodeForToken(ctx, reqBody.GetCode())
+		token, err = dsClients.SpotifyClient.ExchangeCodeForToken(ctx, reqBody.GetCode(), reqBody.GetCodeVerifier())
 		if err != nil {
 			return core.NewGrpcHandlerResponse_InternalServerError[*myncer_pb.ExchangeOAuthCodeResponse](
 				core.WrappedError(err, "failed to exchange oauth code"),
 			)
 		}
 	case myncer_pb.Datasource_DATASOURCE_YOUTUBE:
-		token, err = dsClients.YoutubeClient.ExchangeCodeForToken(ctx, reqBody.GetCode())
+		token, err = dsClients.YoutubeClient.ExchangeCodeForToken(ctx, reqBody.GetCode(), reqBody.GetCodeVerifier())
 		if err != nil {
 			return core.NewGrpcHandlerResponse_InternalServerError[*myncer_pb.ExchangeOAuthCodeResponse](
 				core.WrappedError(err, "failed to exchange oauth code"),
 			)
 		}
 	case myncer_pb.Datasource_DATASOURCE_TIDAL:
-		token, err = dsClients.TidalClient.ExchangeCodeForToken(ctx, reqBody.GetCode())
+		token, err = dsClients.TidalClient.ExchangeCodeForToken(ctx, reqBody.GetCode(), reqBody.GetCodeVerifier())
 		if err != nil {
 			return core.NewGrpcHandlerResponse_InternalServerError[*myncer_pb.ExchangeOAuthCodeResponse](
 				core.WrappedError(err, "failed to exchange oauth code"),

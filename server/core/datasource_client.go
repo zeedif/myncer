@@ -9,7 +9,7 @@ import (
 )
 
 type DatasourceClient interface {
-	ExchangeCodeForToken(ctx context.Context, authCode string) (*oauth2.Token, error)
+	ExchangeCodeForToken(ctx context.Context, authCode string, codeVerifier string) (*oauth2.Token, error)
 	GetPlaylists(
 		ctx context.Context,
 		userInfo *myncer_pb.User, /*const*/

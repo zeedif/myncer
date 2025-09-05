@@ -34,6 +34,7 @@ var _ core.DatasourceClient = (*spotifyClientImpl)(nil)
 func (s *spotifyClientImpl) ExchangeCodeForToken(
 	ctx context.Context,
 	authCode string,
+	codeVerifier string,
 ) (*oauth2.Token, error) {
 	authenticator := s.getAuthenticator(ctx)
 	token, err := authenticator.Exchange(ctx, authCode)

@@ -172,9 +172,14 @@ func (c *tidalClientImpl) getOAuthConfig(ctx context.Context) *oauth2.Config {
 }
 
 // ExchangeCodeForToken exchanges the authorization code for a token
-func (c *tidalClientImpl) ExchangeCodeForToken(ctx context.Context, authCode string) (*oauth2.Token, error) {
+func (c *tidalClientImpl) ExchangeCodeForToken(ctx context.Context, authCode string, codeVerifier string) (*oauth2.Token, error) {
 	conf := c.getOAuthConfig(ctx)
-	token, err := conf.Exchange(ctx, authCode)
+
+	opts := []oauth2.AuthCodeOption{
+		oauth2.SetAuthURLParam("code_verifier", codeVerifier),
+	}
+
+	token, err := conf.Exchange(ctx, authCode, opts...)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to exchange auth code with Tidal")
 	}

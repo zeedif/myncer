@@ -1,5 +1,5 @@
 import * as DatasourceService from "@/generated_grpc/myncer/datasource-DatasourceService_connectquery"
-import type { Datasource } from "@/generated_grpc/myncer/datasource_pb"
+import { Datasource } from "@/generated_grpc/myncer/datasource_pb"
 import { createConnectQueryKey, useMutation, useTransport } from "@connectrpc/connect-query"
 import { useQueryClient } from "@tanstack/react-query"
 import { useEffect, useRef } from "react"
@@ -41,15 +41,38 @@ export const DatasourceAuthPage = ({ datasource }: DatasourceAuthPageProps) => {
       didExchangeRef.current = true
       const code = searchParams.get("code")
       const state = searchParams.get("state")
+
       if (!code) {
         toast.error("Missing OAuth code in URL parameters.")
+        navigate("/datasources", { replace: true })
         return
       }
+
+      let codeVerifier: string | undefined;
+      if (datasource === Datasource.TIDAL) {
+        const storedState = sessionStorage.getItem("tidal_csrf_state");
+        if (storedState !== state) {
+            toast.error("CSRF state mismatch. Authorization failed.");
+            navigate("/datasources", { replace: true });
+            return;
+        }
+        codeVerifier = sessionStorage.getItem("tidal_code_verifier") || undefined;
+        if (!codeVerifier) {
+            toast.error("PKCE code verifier not found. Authorization failed.");
+            navigate("/datasources", { replace: true });
+            return;
+        }
+        // Limpiar storage después de usarlo
+        sessionStorage.removeItem("tidal_code_verifier");
+        sessionStorage.removeItem("tidal_csrf_state");
+      }
+
       try {
         await exchangeOAuthCode({
           datasource,
           code,
           csrfToken: state || undefined,
+          codeVerifier: codeVerifier,
         })
         navigate("/datasources", { replace: true })
       } catch (err) {
@@ -58,7 +81,7 @@ export const DatasourceAuthPage = ({ datasource }: DatasourceAuthPageProps) => {
     }
 
     exchangeToken()
-  }, [navigate, searchParams])
+  }, [navigate, searchParams, datasource, exchangeOAuthCode])
 
   return (
     <div className="flex h-screen items-center justify-center">
