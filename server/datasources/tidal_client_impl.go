@@ -616,36 +616,3 @@ func buildSongFromTidalV2Track(trackResource TidalV2TrackResource) core.Song {
 		Isrc:             trackResource.Attributes.ISRC,
 	})
 }
-
-// Legacy build function (kept for reference, but should be removed)
-// Deprecated: Use buildSongFromTidalV2Track instead.
-func buildSongFromTidalTrack(track struct {
-	ID      int
-	Title   string
-	Artists []struct {
-		Name string
-	}
-	Artist struct {
-		Name string
-	}
-	Album struct {
-		Title string
-	}
-	ISRC string
-}) core.Song {
-	artists := []string{}
-	for _, artist := range track.Artists {
-		artists = append(artists, artist.Name)
-	}
-	if len(artists) == 0 && track.Artist.Name != "" {
-		artists = append(artists, track.Artist.Name)
-	}
-	return sync_engine.NewSong(&myncer_pb.Song{
-		Name:             track.Title,
-		ArtistName:       artists,
-		AlbumName:        track.Album.Title,
-		Datasource:       myncer_pb.Datasource_DATASOURCE_TIDAL,
-		DatasourceSongId: strconv.Itoa(track.ID),
-		Isrc:             track.ISRC,
-	})
-}
