@@ -9,7 +9,7 @@ import { protoTimestampToDate } from "@/lib/utils"
 import { useListSyncRuns } from "@/hooks/useListSyncRuns"
 import { Link } from "react-router-dom"
 
-export const SyncRender = ({ sync }: { sync: Sync }) => {
+export const SyncRender = ({ sync, showHistoryButton = true }: { sync: Sync; showHistoryButton?: boolean }) => {
   const { runSync, isRunningSync } = useRunSync()
   const { deleteSync, isDeleting } = useDeleteSync()
   const { syncRuns } = useListSyncRuns()
@@ -126,12 +126,14 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
           {/* View History */}
-          <Button size="sm" variant="outline" asChild>
-            <Link to={`/syncruns?syncId=${id}`}>
-              <History className="w-4 h-4 mr-2" />
-              View History
-            </Link>
-          </Button>
+          {showHistoryButton && (
+            <Button size="sm" variant="outline" asChild>
+              <Link to={`/syncruns?syncId=${id}`}>
+                <History className="w-4 h-4 mr-2" />
+                View History
+              </Link>
+            </Button>
+          )}
 
           {/* Delete Sync */}
           <Button

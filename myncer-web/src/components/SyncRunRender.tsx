@@ -120,7 +120,7 @@ export const SyncRunRender = ({ syncRun, showViewSyncButton = true }: SyncRunRen
           </Dialog>
           {showViewSyncButton && (
             <Button variant="outline" asChild>
-              <Link to={`/syncruns?syncId=${syncRun.syncId}`}>View All Syncs</Link>
+              <Link to={`/syncruns?syncId=${syncRun.syncId}`}>View Sync</Link>
             </Button>
           )}
         </div>
