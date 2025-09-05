@@ -18,6 +18,7 @@ var (
 
 type DatasourceTokenStore interface {
 	AddToken(ctx context.Context, oAuthToken *myncer_pb.OAuthToken /*const*/) error
+	UpdateToken(ctx context.Context, oAuthToken *myncer_pb.OAuthToken) error
 	GetTokens(ctx context.Context, userId string) ([]*myncer_pb.OAuthToken, error)
 	GetToken(
 		ctx context.Context,
@@ -54,6 +55,23 @@ func (d *datasourceTokenStoreImpl) AddToken(
 		protoBytes,
 	); err != nil {
 		return WrappedError(err, "failed to create oauth token in sql")
+	}
+	return nil
+}
+
+func (d *datasourceTokenStoreImpl) UpdateToken(ctx context.Context, oAuthToken *myncer_pb.OAuthToken) error {
+	protoBytes, err := proto.Marshal(oAuthToken)
+	if err != nil {
+		return WrappedError(err, "failed to marshal updated oauth token proto")
+	}
+
+	if _, err := d.db.ExecContext(
+		ctx,
+		`UPDATE datasource_tokens SET data = $1, updated_at = now() WHERE id = $2`,
+		protoBytes,
+		oAuthToken.GetId(),
+	); err != nil {
+		return WrappedError(err, "failed to update oauth token in sql")
 	}
 	return nil
 }

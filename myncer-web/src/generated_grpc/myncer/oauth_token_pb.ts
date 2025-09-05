@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file myncer/oauth_token.proto.
  */
 export const file_myncer_oauth_token: GenFile = /*@__PURE__*/
-  fileDesc("ChhteW5jZXIvb2F1dGhfdG9rZW4ucHJvdG8SBm15bmNlciKoAgoKT0F1dGhUb2tlbhIKCgJpZBgBIAEoCRIPCgd1c2VyX2lkGAIgASgJEhQKDGFjY2Vzc190b2tlbhgDIAEoCRIVCg1yZWZyZXNoX3Rva2VuGAQgASgJEhIKCnRva2VuX3R5cGUYBSABKAkSLgoKZXhwaXJlc19hdBgHIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASJgoKZGF0YXNvdXJjZRgIIAEoDjISLm15bmNlci5EYXRhc291cmNlEi4KCmNyZWF0ZWRfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCnVwZGF0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wSgQIBhAHQjNaMWdpdGh1Yi5jb20vaGFuc2JhbGEvbXluY2VyL3Byb3RvL215bmNlcjtteW5jZXJfcGJiBnByb3RvMw", [file_google_protobuf_timestamp, file_myncer_datasource]);
+  fileDesc("ChhteW5jZXIvb2F1dGhfdG9rZW4ucHJvdG8SBm15bmNlciLqAgoKT0F1dGhUb2tlbhIKCgJpZBgBIAEoCRIPCgd1c2VyX2lkGAIgASgJEhQKDGFjY2Vzc190b2tlbhgDIAEoCRIVCg1yZWZyZXNoX3Rva2VuGAQgASgJEhIKCnRva2VuX3R5cGUYBSABKAkSLgoKZXhwaXJlc19hdBgHIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASJgoKZGF0YXNvdXJjZRgIIAEoDjISLm15bmNlci5EYXRhc291cmNlEhoKEmRhdGFzb3VyY2VfdXNlcl9pZBgLIAEoCRIkChxkYXRhc291cmNlX3VzZXJfY291bnRyeV9jb2RlGAwgASgJEi4KCmNyZWF0ZWRfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCnVwZGF0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wSgQIBhAHQjNaMWdpdGh1Yi5jb20vaGFuc2JhbGEvbXluY2VyL3Byb3RvL215bmNlcjtteW5jZXJfcGJiBnByb3RvMw", [file_google_protobuf_timestamp, file_myncer_datasource]);
 
 /**
  * Represents an OAuth token issued by a datasource.
@@ -60,6 +60,18 @@ export type OAuthToken = Message<"myncer.OAuthToken"> & {
    * @generated from field: myncer.Datasource datasource = 8;
    */
   datasource: Datasource;
+
+  /**
+   * Cached datasource-specific user information
+   *
+   * @generated from field: string datasource_user_id = 11;
+   */
+  datasourceUserId: string;
+
+  /**
+   * @generated from field: string datasource_user_country_code = 12;
+   */
+  datasourceUserCountryCode: string;
 
   /**
    * Metadata which is fetched from SQL (for it's ACID compliance).

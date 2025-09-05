@@ -34,6 +34,9 @@ type OAuthToken struct {
 	TokenType    string                 `protobuf:"bytes,5,opt,name=token_type,json=tokenType,proto3" json:"token_type,omitempty"`
 	ExpiresAt    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	Datasource   Datasource             `protobuf:"varint,8,opt,name=datasource,proto3,enum=myncer.Datasource" json:"datasource,omitempty"`
+	// Cached datasource-specific user information
+	DatasourceUserId          string `protobuf:"bytes,11,opt,name=datasource_user_id,json=datasourceUserId,proto3" json:"datasource_user_id,omitempty"`
+	DatasourceUserCountryCode string `protobuf:"bytes,12,opt,name=datasource_user_country_code,json=datasourceUserCountryCode,proto3" json:"datasource_user_country_code,omitempty"`
 	// Metadata which is fetched from SQL (for it's ACID compliance).
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
@@ -120,6 +123,20 @@ func (x *OAuthToken) GetDatasource() Datasource {
 	return Datasource_DATASOURCE_UNSPECIFIED
 }
 
+func (x *OAuthToken) GetDatasourceUserId() string {
+	if x != nil {
+		return x.DatasourceUserId
+	}
+	return ""
+}
+
+func (x *OAuthToken) GetDatasourceUserCountryCode() string {
+	if x != nil {
+		return x.DatasourceUserCountryCode
+	}
+	return ""
+}
+
 func (x *OAuthToken) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -138,7 +155,7 @@ var File_myncer_oauth_token_proto protoreflect.FileDescriptor
 
 const file_myncer_oauth_token_proto_rawDesc = "" +
 	"\n" +
-	"\x18myncer/oauth_token.proto\x12\x06myncer\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17myncer/datasource.proto\"\x87\x03\n" +
+	"\x18myncer/oauth_token.proto\x12\x06myncer\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17myncer/datasource.proto\"\xf6\x03\n" +
 	"\n" +
 	"OAuthToken\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
@@ -151,7 +168,9 @@ const file_myncer_oauth_token_proto_rawDesc = "" +
 	"expires_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x122\n" +
 	"\n" +
 	"datasource\x18\b \x01(\x0e2\x12.myncer.DatasourceR\n" +
-	"datasource\x129\n" +
+	"datasource\x12,\n" +
+	"\x12datasource_user_id\x18\v \x01(\tR\x10datasourceUserId\x12?\n" +
+	"\x1cdatasource_user_country_code\x18\f \x01(\tR\x19datasourceUserCountryCode\x129\n" +
 	"\n" +
 	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
