@@ -215,7 +215,7 @@ func (c *tidalClientImpl) getOAuthConfig(ctx context.Context) *oauth2.Config {
 			AuthURL:  cTidalAuthURL,
 			TokenURL: cTidalTokenURL,
 		},
-		Scopes: []string{"user.read", "playlists.read", "playlists.write", "collection.read"},
+		Scopes: []string{"user.read", "playlists.read", "playlists.write", "collection.read", "search.read"},
 	}
 }
 

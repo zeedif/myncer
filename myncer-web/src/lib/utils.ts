@@ -21,7 +21,9 @@ const youtubeScopes = [
 const tidalScopes = [
   "user.read",
   "playlists.read",
-  "playlists.write"
+  "playlists.write",
+  "collection.read",
+  "search.read"
 ].join(" ")
 
 // --- PKCE Helper Functions ---
