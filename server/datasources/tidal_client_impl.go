@@ -162,6 +162,7 @@ func getTidalUserInfo(ctx context.Context, client *http.Client) (string, string,
 	}
 	req.Header.Set("Accept", cTidalAcceptHeader)
 
+	core.Printf("Tidal: Fetching user info from %s", req.URL)
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", "", core.WrappedError(err, "failed to get current user from Tidal")
@@ -181,7 +182,7 @@ func getTidalUserInfo(ctx context.Context, client *http.Client) (string, string,
 	if userResponse.Data.ID == "" {
 		return "", "", core.NewError("Tidal user ID not found in response")
 	}
-	
+
 	if userResponse.Data.Attributes.Country == "" {
 		return "", "", core.NewError("Tidal user country code not found in response")
 	}
@@ -207,7 +208,7 @@ func (c *tidalClientImpl) getOAuthConfig(ctx context.Context) *oauth2.Config {
 			AuthURL:  cTidalAuthURL,
 			TokenURL: cTidalTokenURL,
 		},
-		Scopes: []string{"user.read", "playlists.read", "playlists.write"},
+		Scopes: []string{"user.read", "playlists.read", "playlists.write", "collection.read"},
 	}
 }
 
@@ -235,8 +236,7 @@ func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.
 	}
 
 	var allPlaylists []*myncer_pb.Playlist
-
-	nextURL := fmt.Sprintf("%s/playlists?filter[owners.id]=%s&countryCode=%s&limit=%d",
+	nextURL := fmt.Sprintf("%s/userCollections/%s/relationships/playlists?countryCode=%s&include=playlists&limit=%d",
 		cTidalAPIBaseURL,
 		tidalUserID,
 		countryCode,
@@ -245,29 +245,30 @@ func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.
 	for nextURL != "" {
 		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
 		if err != nil {
-			return nil, core.WrappedError(err, "failed to create request for Tidal playlists")
+			return nil, core.WrappedError(err, "failed to create request for Tidal user collection playlists")
 		}
 		req.Header.Set("Accept", cTidalAcceptHeader)
 
+		core.Printf("Tidal: Fetching user collection playlists for user %s from URL: %s", tidalUserID, nextURL)
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, core.WrappedError(err, "failed to get Tidal playlists from URL: %s", nextURL)
+			return nil, core.WrappedError(err, "failed to get Tidal user collection playlists from URL: %s", nextURL)
 		}
 
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
-			return nil, core.NewError("Tidal API returned status %d for playlists. Body: %s", resp.StatusCode, string(body))
+			return nil, core.NewError("Tidal API returned status %d for user collection playlists. Body: %s", resp.StatusCode, string(body))
 		}
 
-		var playlistsResp PlaylistsV2Response
+		var playlistsResp UserCollectionPlaylistsResponse
 		if err := json.NewDecoder(resp.Body).Decode(&playlistsResp); err != nil {
 			resp.Body.Close()
-			return nil, core.WrappedError(err, "failed to decode Tidal playlists response")
+			return nil, core.WrappedError(err, "failed to decode Tidal user collection playlists response")
 		}
 		resp.Body.Close()
 
-		for _, p := range playlistsResp.Data {
+		for _, p := range playlistsResp.Included {
 			if p.Type == "playlists" {
 				allPlaylists = append(allPlaylists, &myncer_pb.Playlist{
 					MusicSource: createMusicSource(myncer_pb.Datasource_DATASOURCE_TIDAL, p.ID),
@@ -278,6 +279,7 @@ func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.
 		}
 
 		if playlistsResp.Links.Next != "" {
+			// The API returns a relative path, so we need to prepend the base URL
 			nextURL = fmt.Sprintf("%s%s", "https://openapi.tidal.com", playlistsResp.Links.Next)
 		} else {
 			nextURL = ""
@@ -292,7 +294,7 @@ func (c *tidalClientImpl) GetPlaylist(ctx context.Context, userInfo *myncer_pb.U
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
-	
+
 	_, countryCode, err := getTidalUserInfo(ctx, client)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal user info")
@@ -305,6 +307,7 @@ func (c *tidalClientImpl) GetPlaylist(ctx context.Context, userInfo *myncer_pb.U
 	}
 	req.Header.Set("Accept", cTidalAcceptHeader)
 
+	core.Printf("Tidal: Fetching playlist details for playlist %s", playlistId)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal playlist %s", playlistId)
@@ -354,6 +357,7 @@ func (c *tidalClientImpl) GetPlaylistSongs(ctx context.Context, userInfo *myncer
 		}
 		req.Header.Set("Accept", cTidalAcceptHeader)
 
+		core.Printf("Tidal: Fetching songs for playlist %s from URL: %s", playlistId, nextURL)
 		resp, err := client.Do(req)
 		if err != nil {
 			return nil, core.WrappedError(err, "failed to get Tidal playlist items from URL: %s", nextURL)
@@ -392,7 +396,7 @@ func (c *tidalClientImpl) AddToPlaylist(ctx context.Context, userInfo *myncer_pb
 	if err != nil {
 		return core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
-	
+
 	_, countryCode, err := getTidalUserInfo(ctx, client)
 	if err != nil {
 		return core.WrappedError(err, "failed to get Tidal user info")
@@ -425,16 +429,18 @@ func (c *tidalClientImpl) AddToPlaylist(ctx context.Context, userInfo *myncer_pb
 		req.Header.Set("Content-Type", "application/vnd.api+json")
 		req.Header.Set("Accept", cTidalAcceptHeader)
 
+		core.Printf("Tidal: Adding %d tracks to playlist %s", len(batch), playlistId)
 		resp, err := client.Do(req)
 		if err != nil {
 			return core.WrappedError(err, "failed to add tracks to Tidal playlist %s", playlistId)
 		}
-		defer resp.Body.Close() // Close body immediately after checking status
 
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close() // Close body after reading
 			return core.NewError("Tidal API returned status %d when adding tracks. Body: %s", resp.StatusCode, string(body))
 		}
+		resp.Body.Close() // Ensure body is closed even on success
 	}
 
 	return nil
@@ -456,6 +462,8 @@ func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb
 			return core.WrappedError(err, "failed to create request to get playlist items for deletion")
 		}
 		req.Header.Set("Accept", cTidalAcceptHeader)
+
+		core.Printf("Tidal: Fetching items to clear from playlist %s", playlistId)
 		resp, err := client.Do(req)
 		if err != nil {
 			return core.WrappedError(err, "failed to get playlist items for deletion")
@@ -484,6 +492,7 @@ func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb
 	}
 
 	if len(itemsToRemove) == 0 {
+		core.Printf("Tidal: Playlist %s is already empty. Nothing to clear.", playlistId)
 		return nil // Nothing to clear
 	}
 
@@ -509,16 +518,18 @@ func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb
 		req.Header.Set("Content-Type", "application/vnd.api+json")
 		req.Header.Set("Accept", cTidalAcceptHeader)
 
+		core.Printf("Tidal: Clearing %d tracks from playlist %s", len(batch), playlistId)
 		resp, err := client.Do(req)
 		if err != nil {
 			return core.WrappedError(err, "failed to clear batch from playlist")
 		}
-		resp.Body.Close()
 
 		if resp.StatusCode != http.StatusNoContent {
 			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
 			return core.NewError("Tidal API returned status %d when clearing playlist. Body: %s", resp.StatusCode, string(body))
 		}
+		resp.Body.Close()
 	}
 
 	return nil
@@ -545,7 +556,7 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
-	
+
 	_, countryCode, err := getTidalUserInfo(ctx, client)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal user info")
@@ -562,12 +573,14 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 		isrcURL := fmt.Sprintf("%s/tracks?filter[isrc]=%s&countryCode=%s", cTidalAPIBaseURL, isrc, countryCode)
 		req, _ := http.NewRequestWithContext(ctx, "GET", isrcURL, nil)
 		req.Header.Set("Accept", cTidalAcceptHeader)
+		core.Printf("Tidal: Searching for track by ISRC %s", isrc)
 		resp, err := client.Do(req)
 		if err == nil {
 			defer resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
 				var tracksResp TracksV2Response
 				if err := json.NewDecoder(resp.Body).Decode(&tracksResp); err == nil && len(tracksResp.Data) > 0 {
+					core.Printf("Tidal: Found track by ISRC %s", isrc)
 					return buildSongFromTidalV2Track(tracksResp.Data[0]), nil
 				}
 			}
@@ -589,6 +602,7 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 		}
 		req.Header.Set("Accept", cTidalAcceptHeader)
 
+		core.Printf("Tidal: Searching for track with query: %s", query)
 		resp, err := client.Do(req)
 		if err != nil {
 			core.Warningf("Tidal search failed for query %q, trying next. Error: %v", query, err)
@@ -596,7 +610,8 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			core.Warningf("Tidal search returned status %d for query %q", resp.StatusCode, query)
+			body, _ := io.ReadAll(resp.Body)
+			core.Warningf("Tidal search returned status %d for query %q. Body: %s", resp.StatusCode, query, string(body))
 			resp.Body.Close()
 			continue
 		}
