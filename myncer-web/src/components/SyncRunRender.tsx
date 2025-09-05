@@ -1,8 +1,18 @@
 import { SyncStatus, type SyncRun } from "@/generated_grpc/myncer/sync_pb"
-import { protoTimestampToDate } from "@/lib/utils"
+import { type Song } from "@/generated_grpc/myncer/song_pb"
+import { protoTimestampToDate, getDatasourceLabel } from "@/lib/utils"
 import { Button } from "./ui/button"
 import { Link } from "react-router-dom"
 import clsx from "clsx"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "./ui/dialog"
+import { AlertTriangle, ListMusic } from "lucide-react"
 
 const syncStatusToUI: Record<
   SyncStatus,
@@ -34,6 +44,24 @@ const syncStatusToUI: Record<
   },
 }
 
+// Componente para mostrar la lista de canciones no encontradas
+const UnmatchedSongsList = ({ songs }: { songs: Song[] }) => (
+  <div className="mt-4">
+    <h3 className="text-lg font-semibold mb-2">Unmatched Songs</h3>
+    <div className="border rounded-lg max-h-96 overflow-y-auto">
+      {songs.map((song, index) => (
+        <div key={index} className="p-3 border-b last:border-b-0">
+          <p className="font-medium text-sm">{song.name}</p>
+          <p className="text-xs text-muted-foreground">{song.artistName.join(", ")}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            (From: {getDatasourceLabel(song.datasource)})
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+)
+
 interface SyncRunRenderProps {
   syncRun: SyncRun
 }
@@ -62,10 +90,37 @@ export const SyncRunRender = ({ syncRun }: SyncRunRenderProps) => {
           </div>
           <p className="text-sm text-muted-foreground mt-2">Created: {createdAt}</p>
           <p className="text-sm text-muted-foreground">Updated: {updatedAt}</p>
+          {syncRun.errorMessage && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+              <AlertTriangle className="h-4 w-4" />
+              <span>{syncRun.errorMessage}</span>
+            </div>
+          )}
         </div>
-        <Button variant="outline" asChild>
-          <Link to={`/syncs/${syncRun.syncId}`}>View Sync</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">View Details</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Sync Run Details</DialogTitle>
+                <DialogDescription>Run ID: {syncRun.runId}</DialogDescription>
+              </DialogHeader>
+              {syncRun.unmatchedSongs && syncRun.unmatchedSongs.length > 0 ? (
+                <UnmatchedSongsList songs={syncRun.unmatchedSongs} />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <ListMusic className="mx-auto h-8 w-8 mb-2" />
+                  <p>All songs were matched successfully in this run.</p>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" asChild>
+            <Link to={`/syncs/${syncRun.syncId}`}>View Sync</Link>
+          </Button>
+        </div>
       </div>
     </div>
   )

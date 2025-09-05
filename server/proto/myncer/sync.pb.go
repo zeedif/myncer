@@ -275,8 +275,12 @@ type SyncRun struct {
 	// The status of this sync run.
 	SyncStatus SyncStatus `protobuf:"varint,3,opt,name=sync_status,json=syncStatus,proto3,enum=myncer.SyncStatus" json:"sync_status,omitempty"`
 	// Metadata which is fetched from SQL (for it's ACID compliance).
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Lista de canciones no encontradas durante la sincronización
+	UnmatchedSongs []*Song `protobuf:"bytes,6,rep,name=unmatched_songs,json=unmatchedSongs,proto3" json:"unmatched_songs,omitempty"`
+	// Mensaje de error detallado (ej. playlist eliminada)
+	ErrorMessage  string `protobuf:"bytes,7,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -344,6 +348,20 @@ func (x *SyncRun) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *SyncRun) GetUnmatchedSongs() []*Song {
+	if x != nil {
+		return x.UnmatchedSongs
+	}
+	return nil
+}
+
+func (x *SyncRun) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
 }
 
 // Representative of source -> destination.
@@ -991,7 +1009,7 @@ var File_myncer_sync_proto protoreflect.FileDescriptor
 
 const file_myncer_sync_proto_rawDesc = "" +
 	"\n" +
-	"\x11myncer/sync.proto\x12\x06myncer\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17myncer/datasource.proto\"\xa8\x01\n" +
+	"\x11myncer/sync.proto\x12\x06myncer\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17myncer/datasource.proto\x1a\x11myncer/song.proto\"\xa8\x01\n" +
 	"\x11PlaylistMergeSync\x12-\n" +
 	"\asources\x18\x01 \x03(\v2\x13.myncer.MusicSourceR\asources\x125\n" +
 	"\vdestination\x18\x02 \x01(\v2\x13.myncer.MusicSourceR\vdestination\x12-\n" +
@@ -1006,7 +1024,7 @@ const file_myncer_sync_proto_rawDesc = "" +
 	"\fone_way_sync\x18\x05 \x01(\v2\x12.myncer.OneWaySyncH\x00R\n" +
 	"oneWaySync\x12K\n" +
 	"\x13playlist_merge_sync\x18\x06 \x01(\v2\x19.myncer.PlaylistMergeSyncH\x00R\x11playlistMergeSyncB\x0e\n" +
-	"\fsync_variant\"\xe4\x01\n" +
+	"\fsync_variant\"\xc0\x02\n" +
 	"\aSyncRun\x12\x17\n" +
 	"\async_id\x18\x01 \x01(\tR\x06syncId\x12\x15\n" +
 	"\x06run_id\x18\x02 \x01(\tR\x05runId\x123\n" +
@@ -1015,7 +1033,9 @@ const file_myncer_sync_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x9f\x01\n" +
+	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x125\n" +
+	"\x0funmatched_songs\x18\x06 \x03(\v2\f.myncer.SongR\x0eunmatchedSongs\x12#\n" +
+	"\rerror_message\x18\a \x01(\tR\ferrorMessage\"\x9f\x01\n" +
 	"\n" +
 	"OneWaySync\x12+\n" +
 	"\x06source\x18\x01 \x01(\v2\x13.myncer.MusicSourceR\x06source\x125\n" +
@@ -1100,6 +1120,7 @@ var file_myncer_sync_proto_goTypes = []any{
 	(*ListSyncRunsResponse)(nil),  // 16: myncer.ListSyncRunsResponse
 	(*MusicSource)(nil),           // 17: myncer.MusicSource
 	(*timestamppb.Timestamp)(nil), // 18: google.protobuf.Timestamp
+	(*Song)(nil),                  // 19: myncer.Song
 }
 var file_myncer_sync_proto_depIdxs = []int32{
 	17, // 0: myncer.PlaylistMergeSync.sources:type_name -> myncer.MusicSource
@@ -1111,32 +1132,33 @@ var file_myncer_sync_proto_depIdxs = []int32{
 	0,  // 6: myncer.SyncRun.sync_status:type_name -> myncer.SyncStatus
 	18, // 7: myncer.SyncRun.created_at:type_name -> google.protobuf.Timestamp
 	18, // 8: myncer.SyncRun.updated_at:type_name -> google.protobuf.Timestamp
-	17, // 9: myncer.OneWaySync.source:type_name -> myncer.MusicSource
-	17, // 10: myncer.OneWaySync.destination:type_name -> myncer.MusicSource
-	4,  // 11: myncer.CreateSyncRequest.one_way_sync:type_name -> myncer.OneWaySync
-	1,  // 12: myncer.CreateSyncRequest.playlist_merge_sync:type_name -> myncer.PlaylistMergeSync
-	2,  // 13: myncer.CreateSyncResponse.sync:type_name -> myncer.Sync
-	2,  // 14: myncer.ListSyncsResponse.syncs:type_name -> myncer.Sync
-	2,  // 15: myncer.GetSyncResponse.sync:type_name -> myncer.Sync
-	0,  // 16: myncer.RunSyncResponse.status:type_name -> myncer.SyncStatus
-	3,  // 17: myncer.ListSyncRunsResponse.sync_runs:type_name -> myncer.SyncRun
-	5,  // 18: myncer.SyncService.CreateSync:input_type -> myncer.CreateSyncRequest
-	7,  // 19: myncer.SyncService.DeleteSync:input_type -> myncer.DeleteSyncRequest
-	9,  // 20: myncer.SyncService.ListSyncs:input_type -> myncer.ListSyncsRequest
-	11, // 21: myncer.SyncService.GetSync:input_type -> myncer.GetSyncRequest
-	13, // 22: myncer.SyncService.RunSync:input_type -> myncer.RunSyncRequest
-	15, // 23: myncer.SyncService.ListSyncRuns:input_type -> myncer.ListSyncRunsRequest
-	6,  // 24: myncer.SyncService.CreateSync:output_type -> myncer.CreateSyncResponse
-	8,  // 25: myncer.SyncService.DeleteSync:output_type -> myncer.DeleteSyncResponse
-	10, // 26: myncer.SyncService.ListSyncs:output_type -> myncer.ListSyncsResponse
-	12, // 27: myncer.SyncService.GetSync:output_type -> myncer.GetSyncResponse
-	14, // 28: myncer.SyncService.RunSync:output_type -> myncer.RunSyncResponse
-	16, // 29: myncer.SyncService.ListSyncRuns:output_type -> myncer.ListSyncRunsResponse
-	24, // [24:30] is the sub-list for method output_type
-	18, // [18:24] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	19, // 9: myncer.SyncRun.unmatched_songs:type_name -> myncer.Song
+	17, // 10: myncer.OneWaySync.source:type_name -> myncer.MusicSource
+	17, // 11: myncer.OneWaySync.destination:type_name -> myncer.MusicSource
+	4,  // 12: myncer.CreateSyncRequest.one_way_sync:type_name -> myncer.OneWaySync
+	1,  // 13: myncer.CreateSyncRequest.playlist_merge_sync:type_name -> myncer.PlaylistMergeSync
+	2,  // 14: myncer.CreateSyncResponse.sync:type_name -> myncer.Sync
+	2,  // 15: myncer.ListSyncsResponse.syncs:type_name -> myncer.Sync
+	2,  // 16: myncer.GetSyncResponse.sync:type_name -> myncer.Sync
+	0,  // 17: myncer.RunSyncResponse.status:type_name -> myncer.SyncStatus
+	3,  // 18: myncer.ListSyncRunsResponse.sync_runs:type_name -> myncer.SyncRun
+	5,  // 19: myncer.SyncService.CreateSync:input_type -> myncer.CreateSyncRequest
+	7,  // 20: myncer.SyncService.DeleteSync:input_type -> myncer.DeleteSyncRequest
+	9,  // 21: myncer.SyncService.ListSyncs:input_type -> myncer.ListSyncsRequest
+	11, // 22: myncer.SyncService.GetSync:input_type -> myncer.GetSyncRequest
+	13, // 23: myncer.SyncService.RunSync:input_type -> myncer.RunSyncRequest
+	15, // 24: myncer.SyncService.ListSyncRuns:input_type -> myncer.ListSyncRunsRequest
+	6,  // 25: myncer.SyncService.CreateSync:output_type -> myncer.CreateSyncResponse
+	8,  // 26: myncer.SyncService.DeleteSync:output_type -> myncer.DeleteSyncResponse
+	10, // 27: myncer.SyncService.ListSyncs:output_type -> myncer.ListSyncsResponse
+	12, // 28: myncer.SyncService.GetSync:output_type -> myncer.GetSyncResponse
+	14, // 29: myncer.SyncService.RunSync:output_type -> myncer.RunSyncResponse
+	16, // 30: myncer.SyncService.ListSyncRuns:output_type -> myncer.ListSyncRunsResponse
+	25, // [25:31] is the sub-list for method output_type
+	19, // [19:25] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_myncer_sync_proto_init() }
@@ -1145,6 +1167,7 @@ func file_myncer_sync_proto_init() {
 		return
 	}
 	file_myncer_datasource_proto_init()
+	file_myncer_song_proto_init()
 	file_myncer_sync_proto_msgTypes[1].OneofWrappers = []any{
 		(*Sync_OneWaySync)(nil),
 		(*Sync_PlaylistMergeSync)(nil),

@@ -34,15 +34,19 @@ func (s *syncEngineImpl) RunSync(
 		return core.WrappedError(err, "failed to store sync run")
 	}
 
-	// Run the sync.
+	// Run the sync and capture unmatched songs.
 	var err error = nil
+	var unmatchedSongs []*myncer_pb.Song
+
 	switch v := sync.GetSyncVariant().(type) {
 	case *myncer_pb.Sync_OneWaySync:
-		if err = s.runOneWaySync(ctx, userInfo, v.OneWaySync); err != nil {
+		unmatchedSongs, err = s.runOneWaySync(ctx, userInfo, v.OneWaySync)
+		if err != nil {
 			err = core.WrappedError(err, "failed to run one-way sync")
 		}
 	case *myncer_pb.Sync_PlaylistMergeSync:
-		if err = s.runPlaylistMergeSync(ctx, userInfo, v.PlaylistMergeSync); err != nil {
+		unmatchedSongs, err = s.runPlaylistMergeSync(ctx, userInfo, v.PlaylistMergeSync)
+		if err != nil {
 			err = core.WrappedError(err, "failed to run playlist merge sync")
 		}
 	default:
@@ -53,9 +57,12 @@ func (s *syncEngineImpl) RunSync(
 	// Update the status of the sync run in the database.
 	if err != nil {
 		syncRun.SyncStatus = myncer_pb.SyncStatus_SYNC_STATUS_FAILED
+		syncRun.ErrorMessage = err.Error()
 	} else {
 		syncRun.SyncStatus = myncer_pb.SyncStatus_SYNC_STATUS_COMPLETED
 	}
+	syncRun.UnmatchedSongs = unmatchedSongs
+
 	if err := s.storeSyncRun(ctx, syncRun, false /*create*/); err != nil {
 		return core.WrappedError(err, "failed to update sync run in database")
 	}
@@ -104,20 +111,20 @@ func (s *syncEngineImpl) runOneWaySync(
 	ctx context.Context,
 	userInfo *myncer_pb.User, /*const*/
 	sync *myncer_pb.OneWaySync, /*const*/
-) error {
+) ([]*myncer_pb.Song, error) {
 	sourceClient, err := s.getClient(ctx, sync.GetSource().GetDatasource())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	destClient, err := s.getClient(ctx, sync.GetDestination().GetDatasource())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Fetch songs from source playlist
 	sourceSongs, err := sourceClient.GetPlaylistSongs(ctx, userInfo, sync.GetSource().GetPlaylistId())
 	if err != nil {
-		return core.WrappedError(err, "failed to fetch source playlist")
+		return nil, core.WrappedError(err, "failed to fetch source playlist")
 	}
 
 	// Normalize songs if supported.
@@ -128,20 +135,20 @@ func (s *syncEngineImpl) runOneWaySync(
 			core.NewSongList(sourceSongs),
 		)
 		if err != nil {
-			return core.WrappedError(err, "failed to normalize songs")
+			return nil, core.WrappedError(err, "failed to normalize songs")
 		}
 	} else {
 		normalizedSongs = core.NewSongList(sourceSongs)
 	}
 
-	searchedSongs, err := s.getSearchedSongs(
+	searchedSongs, unmatchedSongs, err := s.getSearchedSongsWithUnmatched(
 		ctx,
 		userInfo,
 		normalizedSongs.GetSongs(),
 		sync.GetDestination().GetDatasource(),
 	)
 	if err != nil {
-		return core.WrappedError(err, "failed to get searched songs for destination datasource")
+		return nil, core.WrappedError(err, "failed to get searched songs for destination datasource")
 	}
 
 	// Optionally clear destination playlist
@@ -149,15 +156,16 @@ func (s *syncEngineImpl) runOneWaySync(
 	if sync.OverwriteExisting {
 		core.Printf("Clearing destination playlist")
 		if err := destClient.ClearPlaylist(ctx, userInfo, destPlaylistId); err != nil {
-			return core.WrappedError(err, "failed to clear destination playlist")
+			return unmatchedSongs, core.WrappedError(err, "failed to clear destination playlist")
 		}
 	}
 
 	// Add source songs to destination
 	if err := destClient.AddToPlaylist(ctx, userInfo, destPlaylistId, searchedSongs); err != nil {
-		return core.WrappedError(err, "failed to add songs to destination playlist")
+		return unmatchedSongs, core.WrappedError(err, "failed to add songs to destination playlist")
 	}
-	return nil
+	
+	return unmatchedSongs, nil
 }
 
 func (s *syncEngineImpl) getSearchedSongs(
@@ -191,6 +199,46 @@ func (s *syncEngineImpl) getSearchedSongs(
 	return r, nil
 }
 
+func (s *syncEngineImpl) getSearchedSongsWithUnmatched(
+	ctx context.Context,
+	userInfo *myncer_pb.User, /*const*/
+	songs []core.Song, /*const*/
+	datasource myncer_pb.Datasource, /*const*/
+) ([]core.Song, []*myncer_pb.Song, error) {
+	foundSongs := []core.Song{}
+	unmatchedSongs := []*myncer_pb.Song{}
+	
+	for _, song := range songs {
+		newDatasourceSongId, err := song.GetIdByDatasource(ctx, userInfo, datasource)
+		if err != nil {
+			// Song not found in destination datasource - add to unmatched list
+			core.Errorf(
+				core.NewError("failed to get datasource ID for song %s: %s", song.GetName(), err.Error()),
+			)
+			unmatchedSongs = append(unmatchedSongs, &myncer_pb.Song{
+				Name:             song.GetName(),
+				ArtistName:       song.GetArtistNames(),
+				AlbumName:        song.GetAlbum(),
+				Datasource:       song.GetDatasource(),
+				DatasourceSongId: song.GetDatasourceSongId(),
+			})
+			continue
+		}
+		foundSongs = append(
+			foundSongs,
+			NewSong(
+				&myncer_pb.Song{
+					Name:             song.GetName(),
+					ArtistName:       song.GetArtistNames(),
+					AlbumName:        song.GetAlbum(),
+					DatasourceSongId: newDatasourceSongId,
+				},
+			),
+		)
+	}
+	return foundSongs, unmatchedSongs, nil
+}
+
 func (s *syncEngineImpl) shouldNormalize(ctx context.Context) bool {
 	return core.ToMyncerCtx(ctx).Config.GetLlmConfig().GetEnabled()
 }
@@ -216,14 +264,14 @@ func (s *syncEngineImpl) runPlaylistMergeSync(
 	ctx context.Context,
 	userInfo *myncer_pb.User, /*const*/
 	sync *myncer_pb.PlaylistMergeSync, /*const*/
-) error {
+) ([]*myncer_pb.Song, error) {
 	allSongs := []core.Song{}
 
 	// 1. Collect songs from all sources
 	for _, source := range sync.GetSources() {
 		sourceClient, err := s.getClient(ctx, source.GetDatasource())
 		if err != nil {
-			return core.WrappedError(err, "failed to get source client for datasource %v", source.GetDatasource())
+			return nil, core.WrappedError(err, "failed to get source client for datasource %v", source.GetDatasource())
 		}
 		songs, err := sourceClient.GetPlaylistSongs(ctx, userInfo, source.GetPlaylistId())
 		if err != nil {
@@ -236,13 +284,13 @@ func (s *syncEngineImpl) runPlaylistMergeSync(
 	// 2. Remove duplicates (decoupled logic)
 	uniqueSongs, err := matching.DeduplicateSongs(allSongs, 90.0) // 90.0 is the similarity threshold
 	if err != nil {
-		return core.WrappedError(err, "failed to deduplicate songs")
+		return nil, core.WrappedError(err, "failed to deduplicate songs")
 	}
 
 	// 3. Get destination client
 	destClient, err := s.getClient(ctx, sync.GetDestination().GetDatasource())
 	if err != nil {
-		return core.WrappedError(err, "failed to get destination client")
+		return nil, core.WrappedError(err, "failed to get destination client")
 	}
 
 	destPlaylistId := sync.GetDestination().GetPlaylistId()
@@ -250,20 +298,20 @@ func (s *syncEngineImpl) runPlaylistMergeSync(
 	// 4. (Optional) Clear destination playlist
 	if sync.GetOverwriteExisting() {
 		if err := destClient.ClearPlaylist(ctx, userInfo, destPlaylistId); err != nil {
-			return core.WrappedError(err, "failed to clear destination playlist")
+			return nil, core.WrappedError(err, "failed to clear destination playlist")
 		}
 	}
 	
 	// 5. Add songs to destination list
 	// You may need to search for each song on the destination platform first.
-	searchedSongs, err := s.getSearchedSongs(ctx, userInfo, uniqueSongs, sync.GetDestination().GetDatasource())
+	searchedSongs, unmatchedSongs, err := s.getSearchedSongsWithUnmatched(ctx, userInfo, uniqueSongs, sync.GetDestination().GetDatasource())
 	if err != nil {
-		return core.WrappedError(err, "failed to search for songs on destination platform")
+		return nil, core.WrappedError(err, "failed to search for songs on destination platform")
 	}
 
 	if err := destClient.AddToPlaylist(ctx, userInfo, destPlaylistId, searchedSongs); err != nil {
-		return core.WrappedError(err, "failed to add songs to destination playlist")
+		return unmatchedSongs, core.WrappedError(err, "failed to add songs to destination playlist")
 	}
 
-	return nil
+	return unmatchedSongs, nil
 }
