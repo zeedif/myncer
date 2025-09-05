@@ -15,15 +15,20 @@
       in {
         devShells.default = stable.mkShell {
           buildInputs = [
-            stable.go_1_22
+            stable.go_1_23
             stable.nodejs_20
             stable.pnpm
             stable.docker
             unstable.buf
+            unstable.protobuf
           ];
 
           shellHook = ''
-            export PATH=$PWD/node_modules/.bin:$PATH
+            go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+            go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
+
+            export PATH=$PWD/myncer-web/node_modules/.bin:$HOME/go/bin:$PATH
+
             echo "🧪 Myncer flake shell ready"
           '';
         };
