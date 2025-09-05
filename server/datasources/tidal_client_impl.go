@@ -26,6 +26,7 @@ const (
 	cTidalAPIBaseURL   = "https://openapi.tidal.com/v2"
 	cTidalPageLimit    = 50
 	cTidalAcceptHeader = "application/vnd.api+json"
+	cMinimumSimilarityThreshold = 65.0
 )
 
 // TidalResourceIdentifier is a JSON:API resource identifier
@@ -713,50 +714,38 @@ func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb
 }
 
 // buildTidalQueries constructs a list of search queries from most to least specific.
+// Optimized version to avoid duplicates.
 func buildTidalQueries(songToSearch core.Song) []string {
 	queries := []string{}
 	seen := make(map[string]bool)
 
 	addQuery := func(q string) {
-		if q != "" && !seen[q] {
-			queries = append(queries, q)
-			seen[q] = true
+		trimmed := strings.TrimSpace(q)
+		if trimmed != "" && !seen[trimmed] {
+			queries = append(queries, trimmed)
+			seen[trimmed] = true
 		}
 	}
 
-	// Raw metadata
 	rawTrack := songToSearch.GetName()
 	rawArtists := strings.Join(songToSearch.GetArtistNames(), " ")
 	rawAlbum := songToSearch.GetAlbum()
 
-	// Cleaned metadata for fallback
 	cleanTrack := matching.Clean(rawTrack)
 	cleanArtists := matching.Clean(rawArtists)
 	cleanAlbum := matching.Clean(rawAlbum)
+	
+	// Build queries from most specific to most general
+	addQuery(fmt.Sprintf("%s %s %s", rawArtists, rawTrack, rawAlbum))
+	addQuery(fmt.Sprintf("%s %s %s", cleanArtists, cleanTrack, cleanAlbum))
+	addQuery(fmt.Sprintf("%s %s", rawArtists, rawTrack))
+	addQuery(fmt.Sprintf("%s %s", cleanArtists, cleanTrack))
+	addQuery(fmt.Sprintf("%s %s", rawTrack, rawAlbum))
+	addQuery(fmt.Sprintf("%s %s", cleanTrack, cleanAlbum))
+	addQuery(cleanTrack)
 
-	// Phase 1: Raw, specific queries
-	if rawTrack != "" && rawArtists != "" && rawAlbum != "" {
-		addQuery(fmt.Sprintf("%s %s %s", rawArtists, rawTrack, rawAlbum))
-	}
-	if rawTrack != "" && rawArtists != "" {
-		addQuery(fmt.Sprintf("%s %s", rawArtists, rawTrack))
-	}
-
-	// Phase 2: Cleaned, specific queries
-	if cleanTrack != "" && cleanArtists != "" && cleanAlbum != "" {
-		addQuery(fmt.Sprintf("%s %s %s", cleanArtists, cleanTrack, cleanAlbum))
-	}
-	if cleanTrack != "" && cleanArtists != "" {
-		addQuery(fmt.Sprintf("%s %s", cleanArtists, cleanTrack))
-	}
-
-	// Phase 3: More generic queries
-	if cleanTrack != "" && cleanAlbum != "" {
-		addQuery(fmt.Sprintf("%s %s", cleanTrack, cleanAlbum))
-	}
-	if cleanTrack != "" {
-		addQuery(cleanTrack)
-	}
+	return queries
+}
 
 	return queries
 }
@@ -800,7 +789,8 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 	for _, query := range queries {
 		time.Sleep(250 * time.Millisecond)
 
-		searchURL := fmt.Sprintf("%s/searchResults/%s/relationships/tracks?countryCode=%s&include=tracks&limit=5",
+		// Increase limit of results to have more candidates
+		searchURL := fmt.Sprintf("%s/searchResults/%s/relationships/tracks?countryCode=%s&include=tracks&limit=10",
 			cTidalAPIBaseURL, url.QueryEscape(query), c.tidalCountryCode)
 
 		req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
@@ -842,7 +832,7 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 				foundSong := buildSongFromTidalV2Track(trackResource)
 				score := matching.CalculateSimilarity(songToSearch, foundSong)
 
-				// Nuevo registro de diagnóstico añadido
+				// New diagnostic log
 				core.Printf(
 					"Tidal Search: Query '%s' -> Found candidate: '%s' by '%s'. Score: %.2f",
 					query, foundSong.GetName(), strings.Join(foundSong.GetArtistNames(), ", "), score,
@@ -863,10 +853,13 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 		}
 	}
 
-	if bestMatch == nil {
-		return nil, core.NewError("no suitable track found after trying all queries for: %s", songToSearch.GetName())
+	// --- KEY CORRECTION ---
+	// Apply minimum acceptance threshold.
+	if highestScore < cMinimumSimilarityThreshold {
+		return nil, core.NewError("no suitable track found after trying all queries for: %s (best score: %.2f)", songToSearch.GetName(), highestScore)
 	}
 
+	core.Printf("Tidal Search: Final best match for '%s' is '%s' with score %.2f", songToSearch.GetName(), bestMatch.GetName(), highestScore)
 	return bestMatch, nil
 }
 

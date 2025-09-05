@@ -80,8 +80,23 @@ func CalculateSimilarity(songA, songB core.Song) float64 {
 		Clean(songB.GetAlbum()),
 	)
 
-	// Weighting: 45% title, 45% artist, 10% album.
-	weightedScore := (titleScore*0.45) + (artistScore*0.45) + (albumScore*0.10)
+	// If the artist name doesn't match at all, it's very unlikely to be the correct song.
+	// Heavily penalize the score if artist similarity is low.
+	if artistScore < 50 {
+		return artistScore * 0.5 // Return very low score so it gets discarded.
+	}
+
+	// If albums are present in both songs but don't match, reduce the importance of title.
+	titleWeight := 0.45
+	if albumA != "" && albumB != "" && albumScore < 70 {
+		titleWeight = 0.30
+	}
+	
+	// New weightings: 45% artist, 45% title (or 30% if album doesn't match), 10% album.
+	artistWeight := 0.45
+	albumWeight := 0.10
+
+	weightedScore := (titleScore * titleWeight) + (artistScore * artistWeight) + (albumScore * albumWeight)
 
 	return weightedScore
 }
