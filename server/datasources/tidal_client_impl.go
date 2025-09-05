@@ -752,31 +752,31 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 		return nil, core.WrappedError(err, "failed to ensure Tidal user info")
 	}
 
-	// // 1. Try searching by ISRC first, as it's the most accurate
-	// if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {
-	// 	core.Printf("Tidal: Searching song '%s' for track by ISRC %s", songToSearch.GetName(), isrc)
-	// 	isrcURL := fmt.Sprintf("%s/tracks?filter[isrc]=%s&countryCode=%s&include=albums,artists", cTidalAPIBaseURL, isrc, c.tidalCountryCode)
-	// 	req, _ := http.NewRequestWithContext(ctx, "GET", isrcURL, nil)
-	// 	req.Header.Set("Accept", cTidalAcceptHeader)
+	// 1. Try searching by ISRC first, as it's the most accurate
+	if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {
+		core.Printf("Tidal: Searching song '%s' for track by ISRC %s", songToSearch.GetName(), isrc)
+		isrcURL := fmt.Sprintf("%s/tracks?filter[isrc]=%s&countryCode=%s&include=albums,artists", cTidalAPIBaseURL, isrc, c.tidalCountryCode)
+		req, _ := http.NewRequestWithContext(ctx, "GET", isrcURL, nil)
+		req.Header.Set("Accept", cTidalAcceptHeader)
 
-	// 	resp, err := c.httpClient.Do(req)
-	// 	if err == nil && resp.StatusCode == http.StatusOK {
-	// 		body, readErr := io.ReadAll(resp.Body)
-	// 		resp.Body.Close()
-	// 		if readErr == nil {
-	// 			var tracksResp TracksV2Response
-	// 			if json.Unmarshal(body, &tracksResp) == nil && len(tracksResp.Data) > 0 {
-	// 				core.Printf("Tidal: Found track by ISRC %s", isrc)
-	// 				return buildSongFromTidalV2Track(tracksResp.Data[0]), nil
-	// 			}
-	// 		}
-	// 	}
-	// 	if resp != nil {
-	// 		resp.Body.Close()
-	// 	}
-	// } else {
-	// 	core.Printf("Tidal: No ISRC found for song '%s'. Proceeding with metadata search.", songToSearch.GetName())
-	// }
+		resp, err := c.httpClient.Do(req)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			body, readErr := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if readErr == nil {
+				var tracksResp TracksV2Response
+				if json.Unmarshal(body, &tracksResp) == nil && len(tracksResp.Data) > 0 {
+					core.Printf("Tidal: Found track by ISRC %s", isrc)
+					return buildSongFromTidalV2Track(tracksResp.Data[0]), nil
+				}
+			}
+		}
+		if resp != nil {
+			resp.Body.Close()
+		}
+	} else {
+		core.Printf("Tidal: No ISRC found for song '%s'. Proceeding with metadata search.", songToSearch.GetName())
+	}
 
 	// 2. Fallback to metadata search
 	queries := buildTidalQueries(songToSearch)
