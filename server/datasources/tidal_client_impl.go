@@ -405,7 +405,7 @@ func (c *tidalClientImpl) GetPlaylist(ctx context.Context, userInfo *myncer_pb.U
 	}
 
 	var playlistResp SinglePlaylistV2Response
-	if err := json.NewDecoder(resp.Body).Decode(&playlistResp); err != nil {
+	if err := json.Unmarshal(body, &playlistResp); err != nil {
 		return nil, core.WrappedError(err, "failed to decode single Tidal playlist response")
 	}
 
@@ -488,7 +488,7 @@ func (c *tidalClientImpl) AddToPlaylist(ctx context.Context, userInfo *myncer_pb
 		return core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
 
-	_, countryCode, err := getTidalUserInfo(ctx, userInfo)
+	_, countryCode, err := getTidalUserInfo(ctx, client)
 	if err != nil {
 		return core.WrappedError(err, "failed to get Tidal user info")
 	}
