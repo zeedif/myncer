@@ -747,9 +747,6 @@ func buildTidalQueries(songToSearch core.Song) []string {
 	return queries
 }
 
-	return queries
-}
-
 func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, songToSearch core.Song) (core.Song, error) {
 	if err := c.ensureUserInfo(ctx, userInfo); err != nil {
 		return nil, core.WrappedError(err, "failed to ensure Tidal user info")
