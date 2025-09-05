@@ -23,6 +23,32 @@ const tidalScopes = [
   "w_sub"
 ].join(" ")
 
+// --- PKCE Helper Functions ---
+async function sha256(plain: string): Promise<ArrayBuffer> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(plain)
+  return window.crypto.subtle.digest("SHA-256", data)
+}
+
+function base64urlencode(a: ArrayBuffer): string {
+  return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(a))))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "")
+}
+
+async function pkceChallenge(verifier: string): Promise<string> {
+  const hashed = await sha256(verifier)
+  return base64urlencode(hashed)
+}
+
+function generateCodeVerifier(): string {
+    const randomBytes = new Uint8Array(32);
+    window.crypto.getRandomValues(randomBytes);
+    return base64urlencode(randomBytes.buffer);
+}
+// --- Fin de PKCE Helper Functions ---
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -45,13 +71,21 @@ export const getYoutubeAuthUrl = () => {
   return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}&access_type=offline&prompt=consent`
 }
 
-export const getTidalAuthUrl = () => {
+export const getTidalAuthUrl = async () => {
   const clientId = config.tidalClientId
   const redirectUri = encodeURIComponent(config.tidalRedirectUri)
   const scope = encodeURIComponent(tidalScopes)
   const state = crypto.randomUUID() // CSRF protection
 
-  return `https://auth.tidal.com/v1/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`
+  // PKCE logic (obligatorio según documentación de Tidal)
+  const codeVerifier = generateCodeVerifier()
+  const codeChallenge = await pkceChallenge(codeVerifier)
+  
+  // Store the verifier and state to use them in the callback
+  sessionStorage.setItem("tidal_code_verifier", codeVerifier)
+  sessionStorage.setItem("tidal_csrf_state", state)
+
+  return `https://login.tidal.com/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&code_challenge_method=S256&code_challenge=${codeChallenge}&state=${state}`
 }
 
 export const getDatasourceLabel = (datasource: Datasource) => {

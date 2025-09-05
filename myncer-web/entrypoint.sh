@@ -6,7 +6,7 @@ set -e
 envsubst '${BACKEND_HOST} ${BACKEND_PORT}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf
 
 # Generate JavaScript configuration for the frontend
-envsubst '${VITE_SPOTIFY_CLIENT_ID} ${VITE_SPOTIFY_REDIRECT_URI} ${VITE_YOUTUBE_CLIENT_ID} ${VITE_YOUTUBE_REDIRECT_URI}' \
+envsubst '${VITE_SPOTIFY_CLIENT_ID} ${VITE_SPOTIFY_REDIRECT_URI} ${VITE_YOUTUBE_CLIENT_ID} ${VITE_YOUTUBE_REDIRECT_URI} ${VITE_TIDAL_CLIENT_ID} ${VITE_TIDAL_REDIRECT_URI}' \
          < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js
 
 echo "--- Generated NGINX config ---"
