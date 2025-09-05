@@ -14,8 +14,14 @@ export const Datasources = () => {
   const handleConnectYoutube = () => {
     window.location.href = getYoutubeAuthUrl()
   }
-  const handleConnectTidal = () => {
-    window.location.href = getTidalAuthUrl()
+  const handleConnectTidal = async () => {
+    try {
+      const authUrl = await getTidalAuthUrl();
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("Failed to generate Tidal Auth URL:", error);
+      // Opcional: Mostrar un toast de error al usuario.
+    }
   }
   const { datasources, loading } = useDatasources()
 

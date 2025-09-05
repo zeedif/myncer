@@ -128,7 +128,9 @@ type ExchangeOAuthCodeRequest struct {
 	// The authorization code returned by the datasource.
 	Code string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
 	// Optional CSRF protection token returned from the datasource.
-	CsrfToken     string `protobuf:"bytes,3,opt,name=csrf_token,json=csrfToken,proto3" json:"csrf_token,omitempty"`
+	CsrfToken string `protobuf:"bytes,3,opt,name=csrf_token,json=csrfToken,proto3" json:"csrf_token,omitempty"`
+	// PKCE code verifier, required by some OAuth 2.1 flows like Tidal.
+	CodeVerifier  string `protobuf:"bytes,4,opt,name=code_verifier,json=codeVerifier,proto3" json:"code_verifier,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -180,6 +182,13 @@ func (x *ExchangeOAuthCodeRequest) GetCode() string {
 func (x *ExchangeOAuthCodeRequest) GetCsrfToken() string {
 	if x != nil {
 		return x.CsrfToken
+	}
+	return ""
+}
+
+func (x *ExchangeOAuthCodeRequest) GetCodeVerifier() string {
+	if x != nil {
+		return x.CodeVerifier
 	}
 	return ""
 }
@@ -632,14 +641,15 @@ var File_myncer_datasource_proto protoreflect.FileDescriptor
 
 const file_myncer_datasource_proto_rawDesc = "" +
 	"\n" +
-	"\x17myncer/datasource.proto\x12\x06myncer\"\x81\x01\n" +
+	"\x17myncer/datasource.proto\x12\x06myncer\"\xa6\x01\n" +
 	"\x18ExchangeOAuthCodeRequest\x122\n" +
 	"\n" +
 	"datasource\x18\x01 \x01(\x0e2\x12.myncer.DatasourceR\n" +
 	"datasource\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12\x1d\n" +
 	"\n" +
-	"csrf_token\x18\x03 \x01(\tR\tcsrfToken\"\x91\x01\n" +
+	"csrf_token\x18\x03 \x01(\tR\tcsrfToken\x12#\n" +
+	"\rcode_verifier\x18\x04 \x01(\tR\fcodeVerifier\"\x91\x01\n" +
 	"\x19ExchangeOAuthCodeResponse\x12#\n" +
 	"\rerror_message\x18\x01 \x01(\tR\ferrorMessage\x12O\n" +
 	"\x15oauth_exchange_status\x18\x02 \x01(\x0e2\x1b.myncer.OAuthExchangeStatusR\x13oauthExchangeStatus\"\x18\n" +

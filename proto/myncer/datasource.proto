@@ -24,6 +24,8 @@ message ExchangeOAuthCodeRequest {
   string code = 2;
   // Optional CSRF protection token returned from the datasource.
   string csrf_token = 3;
+  // PKCE code verifier, required by some OAuth 2.1 flows like Tidal.
+  string code_verifier = 4;
 }
 
 enum OAuthExchangeStatus {

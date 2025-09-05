@@ -71,21 +71,32 @@ export const getYoutubeAuthUrl = () => {
   return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}&access_type=offline&prompt=consent`
 }
 
-export const getTidalAuthUrl = async () => {
+export const getTidalAuthUrl = async (): Promise<string> => {
   const clientId = config.tidalClientId
   const redirectUri = encodeURIComponent(config.tidalRedirectUri)
   const scope = encodeURIComponent(tidalScopes)
-  const state = crypto.randomUUID() // CSRF protection
+  const state = crypto.randomUUID()
 
-  // PKCE logic (obligatorio según documentación de Tidal)
+  // PKCE logic (required by Tidal)
   const codeVerifier = generateCodeVerifier()
   const codeChallenge = await pkceChallenge(codeVerifier)
   
-  // Store the verifier and state to use them in the callback
+  // Store the verifier and state to use them in the callback page.
+  // This is crucial for the token exchange step.
   sessionStorage.setItem("tidal_code_verifier", codeVerifier)
   sessionStorage.setItem("tidal_csrf_state", state)
 
-  return `https://login.tidal.com/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&code_challenge_method=S256&code_challenge=${codeChallenge}&state=${state}`
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    scope: scope,
+    code_challenge_method: "S256",
+    code_challenge: codeChallenge,
+    state: state,
+  });
+
+  return `https://login.tidal.com/authorize?${params.toString()}`
 }
 
 export const getDatasourceLabel = (datasource: Datasource) => {
