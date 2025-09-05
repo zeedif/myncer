@@ -63,9 +63,10 @@ const UnmatchedSongsList = ({ songs }: { songs: Song[] }) => (
 )
 
 interface SyncRunRenderProps {
-  syncRun: SyncRun
+  syncRun: SyncRun;
+  showViewSyncButton?: boolean;
 }
-export const SyncRunRender = ({ syncRun }: SyncRunRenderProps) => {
+export const SyncRunRender = ({ syncRun, showViewSyncButton = true }: SyncRunRenderProps) => {
   const createdAt = syncRun.createdAt
     ? protoTimestampToDate(syncRun.createdAt).toLocaleString()
     : "Unknown"
@@ -117,9 +118,11 @@ export const SyncRunRender = ({ syncRun }: SyncRunRenderProps) => {
               )}
             </DialogContent>
           </Dialog>
-          <Button variant="outline" asChild>
-            <Link to={`/syncs/${syncRun.syncId}`}>View Sync</Link>
-          </Button>
+          {showViewSyncButton && (
+            <Button variant="outline" asChild>
+              <Link to={`/syncruns?syncId=${syncRun.syncId}`}>View All Syncs</Link>
+            </Button>
+          )}
         </div>
       </div>
     </div>

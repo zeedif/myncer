@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { CircleCheck, CircleX, AlertCircle, Loader2, Trash2, Play } from "lucide-react"
+import { CircleCheck, CircleX, AlertCircle, Loader2, Trash2, Play, History } from "lucide-react"
 import { OneWaySyncRender } from "./OneWaySyncRender"
 import { PlaylistMergeSyncRender } from "./PlaylistMergeSyncRender"
 import { useDeleteSync } from "@/hooks/useDeleteSync"
@@ -7,6 +7,7 @@ import { useRunSync } from "@/hooks/useRunSync"
 import { SyncStatus, type Sync } from "@/generated_grpc/myncer/sync_pb"
 import { protoTimestampToDate } from "@/lib/utils"
 import { useListSyncRuns } from "@/hooks/useListSyncRuns"
+import { Link } from "react-router-dom"
 
 export const SyncRender = ({ sync }: { sync: Sync }) => {
   const { runSync, isRunningSync } = useRunSync()
@@ -124,6 +125,14 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
         </div>
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
+          {/* View History */}
+          <Button size="sm" variant="outline" asChild>
+            <Link to={`/syncruns?syncId=${id}`}>
+              <History className="w-4 h-4 mr-2" />
+              View History
+            </Link>
+          </Button>
+
           {/* Delete Sync */}
           <Button
             size="sm"

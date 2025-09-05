@@ -2,6 +2,9 @@ package rpc_handlers
 
 import (
 	"context"
+	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/hansbala/myncer/core"
@@ -62,12 +65,17 @@ func (cs *createSyncImpl) validateRequest(
 	req *myncer_pb.CreateSyncRequest, /*const*/
 	userInfo *myncer_pb.User, /*const*/
 ) error {
+	existingSyncs, err := core.ToMyncerCtx(ctx).DB.SyncStore.GetSyncs(ctx, userInfo)
+	if err != nil {
+		return core.WrappedError(err, "failed to check for existing syncs")
+	}
+
 	syncVariant := req.GetSyncVariant()
 	switch syncVariant.(type) {
 	case *myncer_pb.CreateSyncRequest_OneWaySync:
-		return validateOneWaySync(ctx, userInfo, req.GetOneWaySync())
+		return validateOneWaySync(ctx, userInfo, req.GetOneWaySync(), existingSyncs)
 	case *myncer_pb.CreateSyncRequest_PlaylistMergeSync:
-		return validatePlaylistMergeSync(ctx, userInfo, req.GetPlaylistMergeSync())
+		return validatePlaylistMergeSync(ctx, userInfo, req.GetPlaylistMergeSync(), existingSyncs)
 	default:
 		return core.NewError("unknown sync type in validate request: %T", syncVariant)
 	}
@@ -92,6 +100,7 @@ func validateOneWaySync(
 	ctx context.Context,
 	userInfo *myncer_pb.User, /*const*/
 	req *myncer_pb.OneWaySync, /*const*/
+	existingSyncs core.Set[*myncer_pb.Sync],
 ) error {
 	// Validate the source and destination datasources are valid.
 	if req.GetSource().GetDatasource() == myncer_pb.Datasource_DATASOURCE_UNSPECIFIED {
@@ -121,6 +130,17 @@ func validateOneWaySync(
 	if len(req.GetDestination().GetPlaylistId()) == 0 {
 		return core.NewError("destination playlist id must be specified")
 	}
+
+	for _, existingSync := range existingSyncs.ToArray() {
+		if ows := existingSync.GetOneWaySync(); ows != nil {
+			if ows.GetSource().GetPlaylistId() == req.GetSource().GetPlaylistId() &&
+				ows.GetSource().GetDatasource() == req.GetSource().GetDatasource() &&
+				ows.GetDestination().GetPlaylistId() == req.GetDestination().GetPlaylistId() &&
+				ows.GetDestination().GetDatasource() == req.GetDestination().GetDatasource() {
+				return core.NewError("A sync with these exact source and destination playlists already exists.")
+			}
+		}
+	}
 	return nil
 }
 
@@ -137,10 +157,20 @@ func NewSync_OneWaySync(
 	}
 }
 
+func canonicalSourceKey(sources []*myncer_pb.MusicSource) string {
+	keys := make([]string, len(sources))
+	for i, s := range sources {
+		keys[i] = fmt.Sprintf("%d:%s", s.GetDatasource(), s.GetPlaylistId())
+	}
+	sort.Strings(keys)
+	return strings.Join(keys, "|")
+}
+
 func validatePlaylistMergeSync(
 	ctx context.Context,
 	userInfo *myncer_pb.User, /*const*/
 	req *myncer_pb.PlaylistMergeSync, /*const*/
+	existingSyncs core.Set[*myncer_pb.Sync],
 ) error {
 	// Validate that there are at least two sources
 	if len(req.GetSources()) < 2 {
@@ -179,6 +209,21 @@ func validatePlaylistMergeSync(
 		}
 		if !connectedDatasources.Contains(source.GetDatasource()) {
 			return core.NewError("source datasource %d is not connected", i+1)
+		}
+	}
+
+	newKey := canonicalSourceKey(req.GetSources())
+	newDest := req.GetDestination()
+
+	for _, existingSync := range existingSyncs.ToArray() {
+		if pms := existingSync.GetPlaylistMergeSync(); pms != nil {
+			existingKey := canonicalSourceKey(pms.GetSources())
+			existingDest := pms.GetDestination()
+			if existingKey == newKey &&
+				existingDest.GetPlaylistId() == newDest.GetPlaylistId() &&
+				existingDest.GetDatasource() == newDest.GetDatasource() {
+				return core.NewError("A merge sync with these exact playlists already exists.")
+			}
 		}
 	}
 	
