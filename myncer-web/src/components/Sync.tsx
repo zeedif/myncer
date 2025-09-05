@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { Loader2, Trash2 } from "lucide-react"
+import { CircleCheck, CircleX, AlertCircle, Loader2, Trash2, Play } from "lucide-react"
 import { OneWaySyncRender } from "./OneWaySyncRender"
 import { PlaylistMergeSyncRender } from "./PlaylistMergeSyncRender"
 import { useDeleteSync } from "@/hooks/useDeleteSync"
@@ -12,10 +12,39 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
   const { runSync, isRunningSync } = useRunSync()
   const { deleteSync, isDeleting } = useDeleteSync()
   const { syncRuns } = useListSyncRuns()
-  const isSyncRunning = syncRuns.some(
-    (run) => run.syncId === sync.id && run.syncStatus === SyncStatus.RUNNING,
-  )
   const { syncVariant, id, createdAt } = sync
+
+  // 1. Find the most recent run for this Sync
+  const mostRecentRun = syncRuns
+    .filter((run) => run.syncId === sync.id)
+    .sort((a, b) => {
+      // Sort by update date descending to get the most recent
+      const dateA = a.updatedAt ? protoTimestampToDate(a.updatedAt).getTime() : 0
+      const dateB = b.updatedAt ? protoTimestampToDate(b.updatedAt).getTime() : 0
+      return dateB - dateA
+    })[0] // Take the first element, which is the most recent
+
+  // 2. Determine the visual status
+  let status: 'RUNNING' | 'PENDING' | 'FAILED' | 'COMPLETED' | 'IDLE' = 'IDLE'
+  if (mostRecentRun) {
+    switch (mostRecentRun.syncStatus) {
+      case SyncStatus.RUNNING:
+        status = 'RUNNING'
+        break
+      case SyncStatus.PENDING:
+        status = 'PENDING'
+        break
+      case SyncStatus.FAILED:
+        status = 'FAILED'
+        break
+      case SyncStatus.COMPLETED:
+        status = 'COMPLETED'
+        break
+    }
+  }
+
+  // React-query mutation state has priority if a click just happened
+  const isSyncing = isRunningSync || status === 'RUNNING' || status === 'PENDING'
 
   const renderVariantLabel = () => {
     switch (syncVariant.case) {
@@ -28,8 +57,49 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
     }
   }
 
+  const renderStatusFooter = () => {
+    if (!mostRecentRun) {
+      return <div>Created at {createdAt ? protoTimestampToDate(createdAt).toLocaleString() : "Unknown"}</div>
+    }
+
+    const runDate = protoTimestampToDate(mostRecentRun.updatedAt!).toLocaleString()
+
+    switch (status) {
+      case 'COMPLETED':
+        return (
+          <div className="flex items-center gap-2 text-green-600">
+            <CircleCheck className="w-4 h-4" />
+            <span>Last synced successfully at {runDate}</span>
+          </div>
+        )
+      case 'FAILED':
+        return (
+          <div className="flex items-center gap-2 text-red-600">
+            <AlertCircle className="w-4 h-4" />
+            <span>Failed at {runDate}</span>
+          </div>
+        )
+      case 'RUNNING':
+        return (
+          <div className="flex items-center gap-2 text-blue-600 animate-pulse">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Syncing now...</span>
+          </div>
+        )
+      case 'PENDING':
+        return (
+          <div className="flex items-center gap-2 text-yellow-600">
+            <Loader2 className="w-4 h-4" />
+            <span>Pending execution...</span>
+          </div>
+        )
+      default:
+        return <div>Created at {createdAt ? protoTimestampToDate(createdAt).toLocaleString() : "Unknown"}</div>
+    }
+  }
+
   return (
-    <div className="w-full rounded-lg border bg-muted p-4 shadow-sm space-y-4">
+    <div className="w-full rounded-lg border bg-card p-4 shadow-sm space-y-4">
       {/* Header: Variant label + Actions */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
@@ -47,11 +117,10 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
         )}
       </div>
 
-      {/* Footer: Metadata */}
+      {/* Footer: Updated */}
       <div className="flex justify-between items-center">
         <div className="space-y-1 text-xs text-muted-foreground">
-          <div>Last synced at coming soon…</div>
-          <div>Created at {createdAt ? protoTimestampToDate(createdAt).toLocaleString() : "Unknown"}</div>
+          {renderStatusFooter()}
         </div>
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
@@ -60,7 +129,7 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
             size="sm"
             variant="destructive"
             onClick={() => deleteSync({ syncId: id })}
-            disabled={isDeleting || isRunningSync || isSyncRunning}
+            disabled={isDeleting || isSyncing}
           >
             {isDeleting ? (
               <>
@@ -74,19 +143,22 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
               </>
             )}
           </Button>
-          {/* Run Sync */}
+          {/* Run/Retry Sync Button - Updated */}
           <Button
             size="sm"
             onClick={() => runSync({ syncId: id })}
-            disabled={isRunningSync || isDeleting || isSyncRunning}
+            disabled={isSyncing || isDeleting}
           >
-            {(isRunningSync || isSyncRunning) ? (
+            {isSyncing ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                Running
+                {status === 'PENDING' ? 'Pending' : 'Running'}
               </>
             ) : (
-              "Run Sync"
+              <>
+                {status === 'FAILED' ? <CircleX className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                {status === 'FAILED' ? 'Retry' : 'Run Sync'}
+              </>
             )}
           </Button>
         </div>
