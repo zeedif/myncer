@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"golang.org/x/oauth2"
 
@@ -643,12 +644,15 @@ func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb
 func buildTidalQueries(songToSearch core.Song) []string {
 	queries := []string{}
 	cleanTrack := matching.Clean(songToSearch.GetName())
-	cleanArtistsStr := strings.Join(songToSearch.GetArtistNames(), " ")
-	cleanArtist := matching.Clean(cleanArtistsStr)
+	
+	var cleanArtists []string
+	for _, artist := range songToSearch.GetArtistNames() {
+		cleanArtists = append(cleanArtists, matching.Clean(artist))
+	}
+	cleanArtistStr := strings.Join(cleanArtists, " ")
 
-	// V2 API seems to perform better with simpler queries
-	if cleanTrack != "" && cleanArtist != "" {
-		queries = append(queries, fmt.Sprintf("%s %s", cleanArtist, cleanTrack))
+	if cleanTrack != "" && cleanArtistStr != "" {
+		queries = append(queries, fmt.Sprintf("%s %s", cleanArtistStr, cleanTrack))
 	}
 	if cleanTrack != "" {
 		queries = append(queries, cleanTrack)
@@ -675,26 +679,25 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 
 	// 1. Try searching by ISRC first, as it's the most accurate
 	if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {
-		isrcURL := fmt.Sprintf("%s/tracks?filter[isrc]=%s&countryCode=%s", cTidalAPIBaseURL, isrc, countryCode)
+		isrcURL := fmt.Sprintf("%s/tracks?filter[isrc]=%s&countryCode=%s&include=albums,artists", cTidalAPIBaseURL, isrc, countryCode)
 		req, _ := http.NewRequestWithContext(ctx, "GET", isrcURL, nil)
 		req.Header.Set("Accept", cTidalAcceptHeader)
 		core.Printf("Tidal: Searching for track by ISRC %s", isrc)
+
 		resp, err := client.Do(req)
-		if err == nil {
+		if err == nil && resp.StatusCode == http.StatusOK {
 			body, readErr := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			if readErr == nil {
-				core.Printf("Tidal: Response from %s -> Status: %s", isrcURL, resp.Status)
-				if resp.StatusCode == http.StatusOK {
-					var tracksResp TracksV2Response
-					if err := json.Unmarshal(body, &tracksResp); err == nil && len(tracksResp.Data) > 0 {
-						core.Printf("Tidal: Found track by ISRC %s", isrc)
-						return buildSongFromTidalV2Track(tracksResp.Data[0]), nil
-					}
-				} else {
-					core.Errorf("Tidal API Error searching by ISRC. Status: %s, Body: %s", resp.Status, string(body))
+				var tracksResp TracksV2Response
+				if json.Unmarshal(body, &tracksResp) == nil && len(tracksResp.Data) > 0 {
+					core.Printf("Tidal: Found track by ISRC %s", isrc)
+					return buildSongFromTidalV2Track(tracksResp.Data[0]), nil
 				}
 			}
+		}
+		if resp != nil {
+			resp.Body.Close()
 		}
 	}
 
@@ -704,8 +707,11 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 	highestScore := 0.0
 
 	for _, query := range queries {
+		time.Sleep(250 * time.Millisecond)
+
 		searchURL := fmt.Sprintf("%s/searchResults/%s/relationships/tracks?countryCode=%s&include=tracks&limit=5",
 			cTidalAPIBaseURL, url.QueryEscape(query), countryCode)
+
 		req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
 		if err != nil {
 			core.Warningf("Failed to create Tidal search request for query %q: %v", query, err)
@@ -720,24 +726,23 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 			continue
 		}
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			core.Warningf("Tidal search returned status %d for query %q. Body: %s", resp.StatusCode, query, string(body))
 			resp.Body.Close()
-			core.Warningf("Failed to read response body for Tidal search query %q: %v", query, err)
 			continue
 		}
+
+		body, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
-
-		core.Printf("Tidal: Response from %s -> Status: %s", searchURL, resp.Status)
-
-		if resp.StatusCode != http.StatusOK {
-			core.Warningf("Tidal search returned status %d for query %q. Body: %s", resp.StatusCode, query, string(body))
+		if err != nil {
+			core.Warningf("Failed to read response body for Tidal search query %q: %v", query, err)
 			continue
 		}
 
 		var searchResp SearchV2Response
 		if err := json.Unmarshal(body, &searchResp); err != nil {
-			core.Warningf("Failed to decode Tidal search response for query %q: %v", query, err)
+			core.Warningf("Failed to decode Tidal search response for query %q: %v. Body: %s", query, err, string(body))
 			continue
 		}
 
@@ -755,6 +760,7 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 				}
 			}
 		}
+
 		if highestScore > 85.0 {
 			break
 		}

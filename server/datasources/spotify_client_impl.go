@@ -216,7 +216,7 @@ func buildSpotifyQueries(songToSearch core.Song) []string {
 	queries := []string{}
 	cleanTrack := matching.Clean(songToSearch.GetName())
 
-	cleanArtists := []string{}
+	var cleanArtists []string
 	for _, artist := range songToSearch.GetArtistNames() {
 		cleanArtists = append(cleanArtists, matching.Clean(artist))
 	}
@@ -240,7 +240,7 @@ func buildSpotifyQueries(songToSearch core.Song) []string {
 	if cleanTrack != "" && cleanAlbum != "" {
 		queries = append(queries, fmt.Sprintf("track:\"%s\" album:\"%s\"", cleanTrack, cleanAlbum))
 	}
-	// Only Title
+	// Only Title as last resort
 	if cleanTrack != "" {
 		queries = append(queries, fmt.Sprintf("track:\"%s\"", cleanTrack))
 	}
