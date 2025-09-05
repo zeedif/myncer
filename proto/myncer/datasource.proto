@@ -9,6 +9,7 @@ service DatasourceService {
   rpc ListDatasources(ListDatasourcesRequest) returns (ListDatasourcesResponse);
   rpc ListPlaylists(ListPlaylistsRequest) returns (ListPlaylistsResponse);
   rpc GetPlaylistDetails(GetPlaylistDetailsRequest) returns (GetPlaylistDetailsResponse);
+  rpc UnlinkDatasource(UnlinkDatasourceRequest) returns (UnlinkDatasourceResponse);
 }
 
 enum Datasource {
@@ -38,6 +39,12 @@ message ExchangeOAuthCodeResponse {
   string error_message = 1;
   OAuthExchangeStatus oauth_exchange_status = 2;
 }
+
+message UnlinkDatasourceRequest {
+  Datasource datasource = 1;
+}
+
+message UnlinkDatasourceResponse {}
 
 message ListDatasourcesRequest {}
 

@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file myncer/datasource.proto.
  */
 export const file_myncer_datasource: GenFile = /*@__PURE__*/
-  fileDesc("ChdteW5jZXIvZGF0YXNvdXJjZS5wcm90bxIGbXluY2VyInsKGEV4Y2hhbmdlT0F1dGhDb2RlUmVxdWVzdBImCgpkYXRhc291cmNlGAEgASgOMhIubXluY2VyLkRhdGFzb3VyY2USDAoEY29kZRgCIAEoCRISCgpjc3JmX3Rva2VuGAMgASgJEhUKDWNvZGVfdmVyaWZpZXIYBCABKAkibgoZRXhjaGFuZ2VPQXV0aENvZGVSZXNwb25zZRIVCg1lcnJvcl9tZXNzYWdlGAEgASgJEjoKFW9hdXRoX2V4Y2hhbmdlX3N0YXR1cxgCIAEoDjIbLm15bmNlci5PQXV0aEV4Y2hhbmdlU3RhdHVzIhgKFkxpc3REYXRhc291cmNlc1JlcXVlc3QiQgoXTGlzdERhdGFzb3VyY2VzUmVzcG9uc2USJwoLZGF0YXNvdXJjZXMYASADKA4yEi5teW5jZXIuRGF0YXNvdXJjZSI+ChRMaXN0UGxheWxpc3RzUmVxdWVzdBImCgpkYXRhc291cmNlGAEgASgOMhIubXluY2VyLkRhdGFzb3VyY2UiawoIUGxheWxpc3QSKQoMbXVzaWNfc291cmNlGAEgASgLMhMubXluY2VyLk11c2ljU291cmNlEgwKBG5hbWUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAkSEQoJaW1hZ2VfdXJsGAQgASgJIjsKFUxpc3RQbGF5bGlzdHNSZXNwb25zZRIiCghwbGF5bGlzdBgBIAMoCzIQLm15bmNlci5QbGF5bGlzdCJYChlHZXRQbGF5bGlzdERldGFpbHNSZXF1ZXN0EiYKCmRhdGFzb3VyY2UYASABKA4yEi5teW5jZXIuRGF0YXNvdXJjZRITCgtwbGF5bGlzdF9pZBgCIAEoCSJAChpHZXRQbGF5bGlzdERldGFpbHNSZXNwb25zZRIiCghwbGF5bGlzdBgBIAEoCzIQLm15bmNlci5QbGF5bGlzdCJKCgtNdXNpY1NvdXJjZRImCgpkYXRhc291cmNlGAEgASgOMhIubXluY2VyLkRhdGFzb3VyY2USEwoLcGxheWxpc3RfaWQYAiABKAkqbgoKRGF0YXNvdXJjZRIaChZEQVRBU09VUkNFX1VOU1BFQ0lGSUVEEAASFgoSREFUQVNPVVJDRV9TUE9USUZZEAESFgoSREFUQVNPVVJDRV9ZT1VUVUJFEAISFAoQREFUQVNPVVJDRV9USURBTBADKoUBChNPQXV0aEV4Y2hhbmdlU3RhdHVzEiYKIk9fQVVUSF9FWENIQU5HRV9TVEFUVVNfVU5TUEVDSUZJRUQQABIiCh5PX0FVVEhfRVhDSEFOR0VfU1RBVFVTX1NVQ0NFU1MQARIiCh5PX0FVVEhfRVhDSEFOR0VfU1RBVFVTX0ZBSUxVUkUQAjLsAgoRRGF0YXNvdXJjZVNlcnZpY2USWAoRRXhjaGFuZ2VPQXV0aENvZGUSIC5teW5jZXIuRXhjaGFuZ2VPQXV0aENvZGVSZXF1ZXN0GiEubXluY2VyLkV4Y2hhbmdlT0F1dGhDb2RlUmVzcG9uc2USUgoPTGlzdERhdGFzb3VyY2VzEh4ubXluY2VyLkxpc3REYXRhc291cmNlc1JlcXVlc3QaHy5teW5jZXIuTGlzdERhdGFzb3VyY2VzUmVzcG9uc2USTAoNTGlzdFBsYXlsaXN0cxIcLm15bmNlci5MaXN0UGxheWxpc3RzUmVxdWVzdBodLm15bmNlci5MaXN0UGxheWxpc3RzUmVzcG9uc2USWwoSR2V0UGxheWxpc3REZXRhaWxzEiEubXluY2VyLkdldFBsYXlsaXN0RGV0YWlsc1JlcXVlc3QaIi5teW5jZXIuR2V0UGxheWxpc3REZXRhaWxzUmVzcG9uc2VCM1oxZ2l0aHViLmNvbS9oYW5zYmFsYS9teW5jZXIvcHJvdG8vbXluY2VyO215bmNlcl9wYmIGcHJvdG8z");
+  fileDesc("ChdteW5jZXIvZGF0YXNvdXJjZS5wcm90bxIGbXluY2VyInsKGEV4Y2hhbmdlT0F1dGhDb2RlUmVxdWVzdBImCgpkYXRhc291cmNlGAEgASgOMhIubXluY2VyLkRhdGFzb3VyY2USDAoEY29kZRgCIAEoCRISCgpjc3JmX3Rva2VuGAMgASgJEhUKDWNvZGVfdmVyaWZpZXIYBCABKAkibgoZRXhjaGFuZ2VPQXV0aENvZGVSZXNwb25zZRIVCg1lcnJvcl9tZXNzYWdlGAEgASgJEjoKFW9hdXRoX2V4Y2hhbmdlX3N0YXR1cxgCIAEoDjIbLm15bmNlci5PQXV0aEV4Y2hhbmdlU3RhdHVzIkEKF1VubGlua0RhdGFzb3VyY2VSZXF1ZXN0EiYKCmRhdGFzb3VyY2UYASABKA4yEi5teW5jZXIuRGF0YXNvdXJjZSIaChhVbmxpbmtEYXRhc291cmNlUmVzcG9uc2UiGAoWTGlzdERhdGFzb3VyY2VzUmVxdWVzdCJCChdMaXN0RGF0YXNvdXJjZXNSZXNwb25zZRInCgtkYXRhc291cmNlcxgBIAMoDjISLm15bmNlci5EYXRhc291cmNlIj4KFExpc3RQbGF5bGlzdHNSZXF1ZXN0EiYKCmRhdGFzb3VyY2UYASABKA4yEi5teW5jZXIuRGF0YXNvdXJjZSJrCghQbGF5bGlzdBIpCgxtdXNpY19zb3VyY2UYASABKAsyEy5teW5jZXIuTXVzaWNTb3VyY2USDAoEbmFtZRgCIAEoCRITCgtkZXNjcmlwdGlvbhgDIAEoCRIRCglpbWFnZV91cmwYBCABKAkiOwoVTGlzdFBsYXlsaXN0c1Jlc3BvbnNlEiIKCHBsYXlsaXN0GAEgAygLMhAubXluY2VyLlBsYXlsaXN0IlgKGUdldFBsYXlsaXN0RGV0YWlsc1JlcXVlc3QSJgoKZGF0YXNvdXJjZRgBIAEoDjISLm15bmNlci5EYXRhc291cmNlEhMKC3BsYXlsaXN0X2lkGAIgASgJIkAKGkdldFBsYXlsaXN0RGV0YWlsc1Jlc3BvbnNlEiIKCHBsYXlsaXN0GAEgASgLMhAubXluY2VyLlBsYXlsaXN0IkoKC011c2ljU291cmNlEiYKCmRhdGFzb3VyY2UYASABKA4yEi5teW5jZXIuRGF0YXNvdXJjZRITCgtwbGF5bGlzdF9pZBgCIAEoCSpuCgpEYXRhc291cmNlEhoKFkRBVEFTT1VSQ0VfVU5TUEVDSUZJRUQQABIWChJEQVRBU09VUkNFX1NQT1RJRlkQARIWChJEQVRBU09VUkNFX1lPVVRVQkUQAhIUChBEQVRBU09VUkNFX1RJREFMEAMqhQEKE09BdXRoRXhjaGFuZ2VTdGF0dXMSJgoiT19BVVRIX0VYQ0hBTkdFX1NUQVRVU19VTlNQRUNJRklFRBAAEiIKHk9fQVVUSF9FWENIQU5HRV9TVEFUVVNfU1VDQ0VTUxABEiIKHk9fQVVUSF9FWENIQU5HRV9TVEFUVVNfRkFJTFVSRRACMsMDChFEYXRhc291cmNlU2VydmljZRJYChFFeGNoYW5nZU9BdXRoQ29kZRIgLm15bmNlci5FeGNoYW5nZU9BdXRoQ29kZVJlcXVlc3QaIS5teW5jZXIuRXhjaGFuZ2VPQXV0aENvZGVSZXNwb25zZRJSCg9MaXN0RGF0YXNvdXJjZXMSHi5teW5jZXIuTGlzdERhdGFzb3VyY2VzUmVxdWVzdBofLm15bmNlci5MaXN0RGF0YXNvdXJjZXNSZXNwb25zZRJMCg1MaXN0UGxheWxpc3RzEhwubXluY2VyLkxpc3RQbGF5bGlzdHNSZXF1ZXN0Gh0ubXluY2VyLkxpc3RQbGF5bGlzdHNSZXNwb25zZRJbChJHZXRQbGF5bGlzdERldGFpbHMSIS5teW5jZXIuR2V0UGxheWxpc3REZXRhaWxzUmVxdWVzdBoiLm15bmNlci5HZXRQbGF5bGlzdERldGFpbHNSZXNwb25zZRJVChBVbmxpbmtEYXRhc291cmNlEh8ubXluY2VyLlVubGlua0RhdGFzb3VyY2VSZXF1ZXN0GiAubXluY2VyLlVubGlua0RhdGFzb3VyY2VSZXNwb25zZUIzWjFnaXRodWIuY29tL2hhbnNiYWxhL215bmNlci9wcm90by9teW5jZXI7bXluY2VyX3BiYgZwcm90bzM");
 
 /**
  * @generated from message myncer.ExchangeOAuthCodeRequest
@@ -73,6 +73,36 @@ export const ExchangeOAuthCodeResponseSchema: GenMessage<ExchangeOAuthCodeRespon
   messageDesc(file_myncer_datasource, 1);
 
 /**
+ * @generated from message myncer.UnlinkDatasourceRequest
+ */
+export type UnlinkDatasourceRequest = Message<"myncer.UnlinkDatasourceRequest"> & {
+  /**
+   * @generated from field: myncer.Datasource datasource = 1;
+   */
+  datasource: Datasource;
+};
+
+/**
+ * Describes the message myncer.UnlinkDatasourceRequest.
+ * Use `create(UnlinkDatasourceRequestSchema)` to create a new message.
+ */
+export const UnlinkDatasourceRequestSchema: GenMessage<UnlinkDatasourceRequest> = /*@__PURE__*/
+  messageDesc(file_myncer_datasource, 2);
+
+/**
+ * @generated from message myncer.UnlinkDatasourceResponse
+ */
+export type UnlinkDatasourceResponse = Message<"myncer.UnlinkDatasourceResponse"> & {
+};
+
+/**
+ * Describes the message myncer.UnlinkDatasourceResponse.
+ * Use `create(UnlinkDatasourceResponseSchema)` to create a new message.
+ */
+export const UnlinkDatasourceResponseSchema: GenMessage<UnlinkDatasourceResponse> = /*@__PURE__*/
+  messageDesc(file_myncer_datasource, 3);
+
+/**
  * @generated from message myncer.ListDatasourcesRequest
  */
 export type ListDatasourcesRequest = Message<"myncer.ListDatasourcesRequest"> & {
@@ -83,7 +113,7 @@ export type ListDatasourcesRequest = Message<"myncer.ListDatasourcesRequest"> & 
  * Use `create(ListDatasourcesRequestSchema)` to create a new message.
  */
 export const ListDatasourcesRequestSchema: GenMessage<ListDatasourcesRequest> = /*@__PURE__*/
-  messageDesc(file_myncer_datasource, 2);
+  messageDesc(file_myncer_datasource, 4);
 
 /**
  * @generated from message myncer.ListDatasourcesResponse
@@ -100,7 +130,7 @@ export type ListDatasourcesResponse = Message<"myncer.ListDatasourcesResponse"> 
  * Use `create(ListDatasourcesResponseSchema)` to create a new message.
  */
 export const ListDatasourcesResponseSchema: GenMessage<ListDatasourcesResponse> = /*@__PURE__*/
-  messageDesc(file_myncer_datasource, 3);
+  messageDesc(file_myncer_datasource, 5);
 
 /**
  * @generated from message myncer.ListPlaylistsRequest
@@ -117,7 +147,7 @@ export type ListPlaylistsRequest = Message<"myncer.ListPlaylistsRequest"> & {
  * Use `create(ListPlaylistsRequestSchema)` to create a new message.
  */
 export const ListPlaylistsRequestSchema: GenMessage<ListPlaylistsRequest> = /*@__PURE__*/
-  messageDesc(file_myncer_datasource, 4);
+  messageDesc(file_myncer_datasource, 6);
 
 /**
  * @generated from message myncer.Playlist
@@ -157,7 +187,7 @@ export type Playlist = Message<"myncer.Playlist"> & {
  * Use `create(PlaylistSchema)` to create a new message.
  */
 export const PlaylistSchema: GenMessage<Playlist> = /*@__PURE__*/
-  messageDesc(file_myncer_datasource, 5);
+  messageDesc(file_myncer_datasource, 7);
 
 /**
  * @generated from message myncer.ListPlaylistsResponse
@@ -176,7 +206,7 @@ export type ListPlaylistsResponse = Message<"myncer.ListPlaylistsResponse"> & {
  * Use `create(ListPlaylistsResponseSchema)` to create a new message.
  */
 export const ListPlaylistsResponseSchema: GenMessage<ListPlaylistsResponse> = /*@__PURE__*/
-  messageDesc(file_myncer_datasource, 6);
+  messageDesc(file_myncer_datasource, 8);
 
 /**
  * @generated from message myncer.GetPlaylistDetailsRequest
@@ -202,7 +232,7 @@ export type GetPlaylistDetailsRequest = Message<"myncer.GetPlaylistDetailsReques
  * Use `create(GetPlaylistDetailsRequestSchema)` to create a new message.
  */
 export const GetPlaylistDetailsRequestSchema: GenMessage<GetPlaylistDetailsRequest> = /*@__PURE__*/
-  messageDesc(file_myncer_datasource, 7);
+  messageDesc(file_myncer_datasource, 9);
 
 /**
  * @generated from message myncer.GetPlaylistDetailsResponse
@@ -221,7 +251,7 @@ export type GetPlaylistDetailsResponse = Message<"myncer.GetPlaylistDetailsRespo
  * Use `create(GetPlaylistDetailsResponseSchema)` to create a new message.
  */
 export const GetPlaylistDetailsResponseSchema: GenMessage<GetPlaylistDetailsResponse> = /*@__PURE__*/
-  messageDesc(file_myncer_datasource, 8);
+  messageDesc(file_myncer_datasource, 10);
 
 /**
  * @generated from message myncer.MusicSource
@@ -247,7 +277,7 @@ export type MusicSource = Message<"myncer.MusicSource"> & {
  * Use `create(MusicSourceSchema)` to create a new message.
  */
 export const MusicSourceSchema: GenMessage<MusicSource> = /*@__PURE__*/
-  messageDesc(file_myncer_datasource, 9);
+  messageDesc(file_myncer_datasource, 11);
 
 /**
  * @generated from enum myncer.Datasource
@@ -341,6 +371,14 @@ export const DatasourceService: GenService<{
     methodKind: "unary";
     input: typeof GetPlaylistDetailsRequestSchema;
     output: typeof GetPlaylistDetailsResponseSchema;
+  },
+  /**
+   * @generated from rpc myncer.DatasourceService.UnlinkDatasource
+   */
+  unlinkDatasource: {
+    methodKind: "unary";
+    input: typeof UnlinkDatasourceRequestSchema;
+    output: typeof UnlinkDatasourceResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_myncer_datasource, 0);

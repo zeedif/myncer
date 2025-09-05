@@ -23,3 +23,8 @@ export const listPlaylists = DatasourceService.method.listPlaylists;
  * @generated from rpc myncer.DatasourceService.GetPlaylistDetails
  */
 export const getPlaylistDetails = DatasourceService.method.getPlaylistDetails;
+
+/**
+ * @generated from rpc myncer.DatasourceService.UnlinkDatasource
+ */
+export const unlinkDatasource = DatasourceService.method.unlinkDatasource;

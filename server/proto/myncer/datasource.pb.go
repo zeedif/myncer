@@ -245,6 +245,86 @@ func (x *ExchangeOAuthCodeResponse) GetOauthExchangeStatus() OAuthExchangeStatus
 	return OAuthExchangeStatus_O_AUTH_EXCHANGE_STATUS_UNSPECIFIED
 }
 
+type UnlinkDatasourceRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Datasource    Datasource             `protobuf:"varint,1,opt,name=datasource,proto3,enum=myncer.Datasource" json:"datasource,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnlinkDatasourceRequest) Reset() {
+	*x = UnlinkDatasourceRequest{}
+	mi := &file_myncer_datasource_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnlinkDatasourceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnlinkDatasourceRequest) ProtoMessage() {}
+
+func (x *UnlinkDatasourceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_myncer_datasource_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnlinkDatasourceRequest.ProtoReflect.Descriptor instead.
+func (*UnlinkDatasourceRequest) Descriptor() ([]byte, []int) {
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *UnlinkDatasourceRequest) GetDatasource() Datasource {
+	if x != nil {
+		return x.Datasource
+	}
+	return Datasource_DATASOURCE_UNSPECIFIED
+}
+
+type UnlinkDatasourceResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnlinkDatasourceResponse) Reset() {
+	*x = UnlinkDatasourceResponse{}
+	mi := &file_myncer_datasource_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnlinkDatasourceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnlinkDatasourceResponse) ProtoMessage() {}
+
+func (x *UnlinkDatasourceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_myncer_datasource_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnlinkDatasourceResponse.ProtoReflect.Descriptor instead.
+func (*UnlinkDatasourceResponse) Descriptor() ([]byte, []int) {
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{3}
+}
+
 type ListDatasourcesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -253,7 +333,7 @@ type ListDatasourcesRequest struct {
 
 func (x *ListDatasourcesRequest) Reset() {
 	*x = ListDatasourcesRequest{}
-	mi := &file_myncer_datasource_proto_msgTypes[2]
+	mi := &file_myncer_datasource_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -265,7 +345,7 @@ func (x *ListDatasourcesRequest) String() string {
 func (*ListDatasourcesRequest) ProtoMessage() {}
 
 func (x *ListDatasourcesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_datasource_proto_msgTypes[2]
+	mi := &file_myncer_datasource_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -278,7 +358,7 @@ func (x *ListDatasourcesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatasourcesRequest.ProtoReflect.Descriptor instead.
 func (*ListDatasourcesRequest) Descriptor() ([]byte, []int) {
-	return file_myncer_datasource_proto_rawDescGZIP(), []int{2}
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{4}
 }
 
 type ListDatasourcesResponse struct {
@@ -290,7 +370,7 @@ type ListDatasourcesResponse struct {
 
 func (x *ListDatasourcesResponse) Reset() {
 	*x = ListDatasourcesResponse{}
-	mi := &file_myncer_datasource_proto_msgTypes[3]
+	mi := &file_myncer_datasource_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -302,7 +382,7 @@ func (x *ListDatasourcesResponse) String() string {
 func (*ListDatasourcesResponse) ProtoMessage() {}
 
 func (x *ListDatasourcesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_datasource_proto_msgTypes[3]
+	mi := &file_myncer_datasource_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -315,7 +395,7 @@ func (x *ListDatasourcesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatasourcesResponse.ProtoReflect.Descriptor instead.
 func (*ListDatasourcesResponse) Descriptor() ([]byte, []int) {
-	return file_myncer_datasource_proto_rawDescGZIP(), []int{3}
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListDatasourcesResponse) GetDatasources() []Datasource {
@@ -334,7 +414,7 @@ type ListPlaylistsRequest struct {
 
 func (x *ListPlaylistsRequest) Reset() {
 	*x = ListPlaylistsRequest{}
-	mi := &file_myncer_datasource_proto_msgTypes[4]
+	mi := &file_myncer_datasource_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -346,7 +426,7 @@ func (x *ListPlaylistsRequest) String() string {
 func (*ListPlaylistsRequest) ProtoMessage() {}
 
 func (x *ListPlaylistsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_datasource_proto_msgTypes[4]
+	mi := &file_myncer_datasource_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -359,7 +439,7 @@ func (x *ListPlaylistsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlaylistsRequest.ProtoReflect.Descriptor instead.
 func (*ListPlaylistsRequest) Descriptor() ([]byte, []int) {
-	return file_myncer_datasource_proto_rawDescGZIP(), []int{4}
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListPlaylistsRequest) GetDatasource() Datasource {
@@ -384,7 +464,7 @@ type Playlist struct {
 
 func (x *Playlist) Reset() {
 	*x = Playlist{}
-	mi := &file_myncer_datasource_proto_msgTypes[5]
+	mi := &file_myncer_datasource_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -396,7 +476,7 @@ func (x *Playlist) String() string {
 func (*Playlist) ProtoMessage() {}
 
 func (x *Playlist) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_datasource_proto_msgTypes[5]
+	mi := &file_myncer_datasource_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -409,7 +489,7 @@ func (x *Playlist) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Playlist.ProtoReflect.Descriptor instead.
 func (*Playlist) Descriptor() ([]byte, []int) {
-	return file_myncer_datasource_proto_rawDescGZIP(), []int{5}
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Playlist) GetMusicSource() *MusicSource {
@@ -450,7 +530,7 @@ type ListPlaylistsResponse struct {
 
 func (x *ListPlaylistsResponse) Reset() {
 	*x = ListPlaylistsResponse{}
-	mi := &file_myncer_datasource_proto_msgTypes[6]
+	mi := &file_myncer_datasource_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -462,7 +542,7 @@ func (x *ListPlaylistsResponse) String() string {
 func (*ListPlaylistsResponse) ProtoMessage() {}
 
 func (x *ListPlaylistsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_datasource_proto_msgTypes[6]
+	mi := &file_myncer_datasource_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -475,7 +555,7 @@ func (x *ListPlaylistsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlaylistsResponse.ProtoReflect.Descriptor instead.
 func (*ListPlaylistsResponse) Descriptor() ([]byte, []int) {
-	return file_myncer_datasource_proto_rawDescGZIP(), []int{6}
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListPlaylistsResponse) GetPlaylist() []*Playlist {
@@ -497,7 +577,7 @@ type GetPlaylistDetailsRequest struct {
 
 func (x *GetPlaylistDetailsRequest) Reset() {
 	*x = GetPlaylistDetailsRequest{}
-	mi := &file_myncer_datasource_proto_msgTypes[7]
+	mi := &file_myncer_datasource_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -509,7 +589,7 @@ func (x *GetPlaylistDetailsRequest) String() string {
 func (*GetPlaylistDetailsRequest) ProtoMessage() {}
 
 func (x *GetPlaylistDetailsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_datasource_proto_msgTypes[7]
+	mi := &file_myncer_datasource_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -522,7 +602,7 @@ func (x *GetPlaylistDetailsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlaylistDetailsRequest.ProtoReflect.Descriptor instead.
 func (*GetPlaylistDetailsRequest) Descriptor() ([]byte, []int) {
-	return file_myncer_datasource_proto_rawDescGZIP(), []int{7}
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetPlaylistDetailsRequest) GetDatasource() Datasource {
@@ -549,7 +629,7 @@ type GetPlaylistDetailsResponse struct {
 
 func (x *GetPlaylistDetailsResponse) Reset() {
 	*x = GetPlaylistDetailsResponse{}
-	mi := &file_myncer_datasource_proto_msgTypes[8]
+	mi := &file_myncer_datasource_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -561,7 +641,7 @@ func (x *GetPlaylistDetailsResponse) String() string {
 func (*GetPlaylistDetailsResponse) ProtoMessage() {}
 
 func (x *GetPlaylistDetailsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_datasource_proto_msgTypes[8]
+	mi := &file_myncer_datasource_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -574,7 +654,7 @@ func (x *GetPlaylistDetailsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlaylistDetailsResponse.ProtoReflect.Descriptor instead.
 func (*GetPlaylistDetailsResponse) Descriptor() ([]byte, []int) {
-	return file_myncer_datasource_proto_rawDescGZIP(), []int{8}
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetPlaylistDetailsResponse) GetPlaylist() *Playlist {
@@ -595,7 +675,7 @@ type MusicSource struct {
 
 func (x *MusicSource) Reset() {
 	*x = MusicSource{}
-	mi := &file_myncer_datasource_proto_msgTypes[9]
+	mi := &file_myncer_datasource_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -607,7 +687,7 @@ func (x *MusicSource) String() string {
 func (*MusicSource) ProtoMessage() {}
 
 func (x *MusicSource) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_datasource_proto_msgTypes[9]
+	mi := &file_myncer_datasource_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -620,7 +700,7 @@ func (x *MusicSource) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MusicSource.ProtoReflect.Descriptor instead.
 func (*MusicSource) Descriptor() ([]byte, []int) {
-	return file_myncer_datasource_proto_rawDescGZIP(), []int{9}
+	return file_myncer_datasource_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *MusicSource) GetDatasource() Datasource {
@@ -652,7 +732,12 @@ const file_myncer_datasource_proto_rawDesc = "" +
 	"\rcode_verifier\x18\x04 \x01(\tR\fcodeVerifier\"\x91\x01\n" +
 	"\x19ExchangeOAuthCodeResponse\x12#\n" +
 	"\rerror_message\x18\x01 \x01(\tR\ferrorMessage\x12O\n" +
-	"\x15oauth_exchange_status\x18\x02 \x01(\x0e2\x1b.myncer.OAuthExchangeStatusR\x13oauthExchangeStatus\"\x18\n" +
+	"\x15oauth_exchange_status\x18\x02 \x01(\x0e2\x1b.myncer.OAuthExchangeStatusR\x13oauthExchangeStatus\"M\n" +
+	"\x17UnlinkDatasourceRequest\x122\n" +
+	"\n" +
+	"datasource\x18\x01 \x01(\x0e2\x12.myncer.DatasourceR\n" +
+	"datasource\"\x1a\n" +
+	"\x18UnlinkDatasourceResponse\"\x18\n" +
 	"\x16ListDatasourcesRequest\"O\n" +
 	"\x17ListDatasourcesResponse\x124\n" +
 	"\vdatasources\x18\x01 \x03(\x0e2\x12.myncer.DatasourceR\vdatasources\"J\n" +
@@ -690,12 +775,13 @@ const file_myncer_datasource_proto_rawDesc = "" +
 	"\x13OAuthExchangeStatus\x12&\n" +
 	"\"O_AUTH_EXCHANGE_STATUS_UNSPECIFIED\x10\x00\x12\"\n" +
 	"\x1eO_AUTH_EXCHANGE_STATUS_SUCCESS\x10\x01\x12\"\n" +
-	"\x1eO_AUTH_EXCHANGE_STATUS_FAILURE\x10\x022\xec\x02\n" +
+	"\x1eO_AUTH_EXCHANGE_STATUS_FAILURE\x10\x022\xc3\x03\n" +
 	"\x11DatasourceService\x12X\n" +
 	"\x11ExchangeOAuthCode\x12 .myncer.ExchangeOAuthCodeRequest\x1a!.myncer.ExchangeOAuthCodeResponse\x12R\n" +
 	"\x0fListDatasources\x12\x1e.myncer.ListDatasourcesRequest\x1a\x1f.myncer.ListDatasourcesResponse\x12L\n" +
 	"\rListPlaylists\x12\x1c.myncer.ListPlaylistsRequest\x1a\x1d.myncer.ListPlaylistsResponse\x12[\n" +
-	"\x12GetPlaylistDetails\x12!.myncer.GetPlaylistDetailsRequest\x1a\".myncer.GetPlaylistDetailsResponseB3Z1github.com/hansbala/myncer/proto/myncer;myncer_pbb\x06proto3"
+	"\x12GetPlaylistDetails\x12!.myncer.GetPlaylistDetailsRequest\x1a\".myncer.GetPlaylistDetailsResponse\x12U\n" +
+	"\x10UnlinkDatasource\x12\x1f.myncer.UnlinkDatasourceRequest\x1a .myncer.UnlinkDatasourceResponseB3Z1github.com/hansbala/myncer/proto/myncer;myncer_pbb\x06proto3"
 
 var (
 	file_myncer_datasource_proto_rawDescOnce sync.Once
@@ -710,44 +796,49 @@ func file_myncer_datasource_proto_rawDescGZIP() []byte {
 }
 
 var file_myncer_datasource_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_myncer_datasource_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_myncer_datasource_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_myncer_datasource_proto_goTypes = []any{
 	(Datasource)(0),                    // 0: myncer.Datasource
 	(OAuthExchangeStatus)(0),           // 1: myncer.OAuthExchangeStatus
 	(*ExchangeOAuthCodeRequest)(nil),   // 2: myncer.ExchangeOAuthCodeRequest
 	(*ExchangeOAuthCodeResponse)(nil),  // 3: myncer.ExchangeOAuthCodeResponse
-	(*ListDatasourcesRequest)(nil),     // 4: myncer.ListDatasourcesRequest
-	(*ListDatasourcesResponse)(nil),    // 5: myncer.ListDatasourcesResponse
-	(*ListPlaylistsRequest)(nil),       // 6: myncer.ListPlaylistsRequest
-	(*Playlist)(nil),                   // 7: myncer.Playlist
-	(*ListPlaylistsResponse)(nil),      // 8: myncer.ListPlaylistsResponse
-	(*GetPlaylistDetailsRequest)(nil),  // 9: myncer.GetPlaylistDetailsRequest
-	(*GetPlaylistDetailsResponse)(nil), // 10: myncer.GetPlaylistDetailsResponse
-	(*MusicSource)(nil),                // 11: myncer.MusicSource
+	(*UnlinkDatasourceRequest)(nil),    // 4: myncer.UnlinkDatasourceRequest
+	(*UnlinkDatasourceResponse)(nil),   // 5: myncer.UnlinkDatasourceResponse
+	(*ListDatasourcesRequest)(nil),     // 6: myncer.ListDatasourcesRequest
+	(*ListDatasourcesResponse)(nil),    // 7: myncer.ListDatasourcesResponse
+	(*ListPlaylistsRequest)(nil),       // 8: myncer.ListPlaylistsRequest
+	(*Playlist)(nil),                   // 9: myncer.Playlist
+	(*ListPlaylistsResponse)(nil),      // 10: myncer.ListPlaylistsResponse
+	(*GetPlaylistDetailsRequest)(nil),  // 11: myncer.GetPlaylistDetailsRequest
+	(*GetPlaylistDetailsResponse)(nil), // 12: myncer.GetPlaylistDetailsResponse
+	(*MusicSource)(nil),                // 13: myncer.MusicSource
 }
 var file_myncer_datasource_proto_depIdxs = []int32{
 	0,  // 0: myncer.ExchangeOAuthCodeRequest.datasource:type_name -> myncer.Datasource
 	1,  // 1: myncer.ExchangeOAuthCodeResponse.oauth_exchange_status:type_name -> myncer.OAuthExchangeStatus
-	0,  // 2: myncer.ListDatasourcesResponse.datasources:type_name -> myncer.Datasource
-	0,  // 3: myncer.ListPlaylistsRequest.datasource:type_name -> myncer.Datasource
-	11, // 4: myncer.Playlist.music_source:type_name -> myncer.MusicSource
-	7,  // 5: myncer.ListPlaylistsResponse.playlist:type_name -> myncer.Playlist
-	0,  // 6: myncer.GetPlaylistDetailsRequest.datasource:type_name -> myncer.Datasource
-	7,  // 7: myncer.GetPlaylistDetailsResponse.playlist:type_name -> myncer.Playlist
-	0,  // 8: myncer.MusicSource.datasource:type_name -> myncer.Datasource
-	2,  // 9: myncer.DatasourceService.ExchangeOAuthCode:input_type -> myncer.ExchangeOAuthCodeRequest
-	4,  // 10: myncer.DatasourceService.ListDatasources:input_type -> myncer.ListDatasourcesRequest
-	6,  // 11: myncer.DatasourceService.ListPlaylists:input_type -> myncer.ListPlaylistsRequest
-	9,  // 12: myncer.DatasourceService.GetPlaylistDetails:input_type -> myncer.GetPlaylistDetailsRequest
-	3,  // 13: myncer.DatasourceService.ExchangeOAuthCode:output_type -> myncer.ExchangeOAuthCodeResponse
-	5,  // 14: myncer.DatasourceService.ListDatasources:output_type -> myncer.ListDatasourcesResponse
-	8,  // 15: myncer.DatasourceService.ListPlaylists:output_type -> myncer.ListPlaylistsResponse
-	10, // 16: myncer.DatasourceService.GetPlaylistDetails:output_type -> myncer.GetPlaylistDetailsResponse
-	13, // [13:17] is the sub-list for method output_type
-	9,  // [9:13] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	0,  // 2: myncer.UnlinkDatasourceRequest.datasource:type_name -> myncer.Datasource
+	0,  // 3: myncer.ListDatasourcesResponse.datasources:type_name -> myncer.Datasource
+	0,  // 4: myncer.ListPlaylistsRequest.datasource:type_name -> myncer.Datasource
+	13, // 5: myncer.Playlist.music_source:type_name -> myncer.MusicSource
+	9,  // 6: myncer.ListPlaylistsResponse.playlist:type_name -> myncer.Playlist
+	0,  // 7: myncer.GetPlaylistDetailsRequest.datasource:type_name -> myncer.Datasource
+	9,  // 8: myncer.GetPlaylistDetailsResponse.playlist:type_name -> myncer.Playlist
+	0,  // 9: myncer.MusicSource.datasource:type_name -> myncer.Datasource
+	2,  // 10: myncer.DatasourceService.ExchangeOAuthCode:input_type -> myncer.ExchangeOAuthCodeRequest
+	6,  // 11: myncer.DatasourceService.ListDatasources:input_type -> myncer.ListDatasourcesRequest
+	8,  // 12: myncer.DatasourceService.ListPlaylists:input_type -> myncer.ListPlaylistsRequest
+	11, // 13: myncer.DatasourceService.GetPlaylistDetails:input_type -> myncer.GetPlaylistDetailsRequest
+	4,  // 14: myncer.DatasourceService.UnlinkDatasource:input_type -> myncer.UnlinkDatasourceRequest
+	3,  // 15: myncer.DatasourceService.ExchangeOAuthCode:output_type -> myncer.ExchangeOAuthCodeResponse
+	7,  // 16: myncer.DatasourceService.ListDatasources:output_type -> myncer.ListDatasourcesResponse
+	10, // 17: myncer.DatasourceService.ListPlaylists:output_type -> myncer.ListPlaylistsResponse
+	12, // 18: myncer.DatasourceService.GetPlaylistDetails:output_type -> myncer.GetPlaylistDetailsResponse
+	5,  // 19: myncer.DatasourceService.UnlinkDatasource:output_type -> myncer.UnlinkDatasourceResponse
+	15, // [15:20] is the sub-list for method output_type
+	10, // [10:15] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_myncer_datasource_proto_init() }
@@ -761,7 +852,7 @@ func file_myncer_datasource_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_myncer_datasource_proto_rawDesc), len(file_myncer_datasource_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

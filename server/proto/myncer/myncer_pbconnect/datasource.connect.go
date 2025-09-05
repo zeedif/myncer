@@ -45,6 +45,9 @@ const (
 	// DatasourceServiceGetPlaylistDetailsProcedure is the fully-qualified name of the
 	// DatasourceService's GetPlaylistDetails RPC.
 	DatasourceServiceGetPlaylistDetailsProcedure = "/myncer.DatasourceService/GetPlaylistDetails"
+	// DatasourceServiceUnlinkDatasourceProcedure is the fully-qualified name of the DatasourceService's
+	// UnlinkDatasource RPC.
+	DatasourceServiceUnlinkDatasourceProcedure = "/myncer.DatasourceService/UnlinkDatasource"
 )
 
 // DatasourceServiceClient is a client for the myncer.DatasourceService service.
@@ -53,6 +56,7 @@ type DatasourceServiceClient interface {
 	ListDatasources(context.Context, *connect.Request[myncer.ListDatasourcesRequest]) (*connect.Response[myncer.ListDatasourcesResponse], error)
 	ListPlaylists(context.Context, *connect.Request[myncer.ListPlaylistsRequest]) (*connect.Response[myncer.ListPlaylistsResponse], error)
 	GetPlaylistDetails(context.Context, *connect.Request[myncer.GetPlaylistDetailsRequest]) (*connect.Response[myncer.GetPlaylistDetailsResponse], error)
+	UnlinkDatasource(context.Context, *connect.Request[myncer.UnlinkDatasourceRequest]) (*connect.Response[myncer.UnlinkDatasourceResponse], error)
 }
 
 // NewDatasourceServiceClient constructs a client for the myncer.DatasourceService service. By
@@ -90,6 +94,12 @@ func NewDatasourceServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(datasourceServiceMethods.ByName("GetPlaylistDetails")),
 			connect.WithClientOptions(opts...),
 		),
+		unlinkDatasource: connect.NewClient[myncer.UnlinkDatasourceRequest, myncer.UnlinkDatasourceResponse](
+			httpClient,
+			baseURL+DatasourceServiceUnlinkDatasourceProcedure,
+			connect.WithSchema(datasourceServiceMethods.ByName("UnlinkDatasource")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -99,6 +109,7 @@ type datasourceServiceClient struct {
 	listDatasources    *connect.Client[myncer.ListDatasourcesRequest, myncer.ListDatasourcesResponse]
 	listPlaylists      *connect.Client[myncer.ListPlaylistsRequest, myncer.ListPlaylistsResponse]
 	getPlaylistDetails *connect.Client[myncer.GetPlaylistDetailsRequest, myncer.GetPlaylistDetailsResponse]
+	unlinkDatasource   *connect.Client[myncer.UnlinkDatasourceRequest, myncer.UnlinkDatasourceResponse]
 }
 
 // ExchangeOAuthCode calls myncer.DatasourceService.ExchangeOAuthCode.
@@ -121,12 +132,18 @@ func (c *datasourceServiceClient) GetPlaylistDetails(ctx context.Context, req *c
 	return c.getPlaylistDetails.CallUnary(ctx, req)
 }
 
+// UnlinkDatasource calls myncer.DatasourceService.UnlinkDatasource.
+func (c *datasourceServiceClient) UnlinkDatasource(ctx context.Context, req *connect.Request[myncer.UnlinkDatasourceRequest]) (*connect.Response[myncer.UnlinkDatasourceResponse], error) {
+	return c.unlinkDatasource.CallUnary(ctx, req)
+}
+
 // DatasourceServiceHandler is an implementation of the myncer.DatasourceService service.
 type DatasourceServiceHandler interface {
 	ExchangeOAuthCode(context.Context, *connect.Request[myncer.ExchangeOAuthCodeRequest]) (*connect.Response[myncer.ExchangeOAuthCodeResponse], error)
 	ListDatasources(context.Context, *connect.Request[myncer.ListDatasourcesRequest]) (*connect.Response[myncer.ListDatasourcesResponse], error)
 	ListPlaylists(context.Context, *connect.Request[myncer.ListPlaylistsRequest]) (*connect.Response[myncer.ListPlaylistsResponse], error)
 	GetPlaylistDetails(context.Context, *connect.Request[myncer.GetPlaylistDetailsRequest]) (*connect.Response[myncer.GetPlaylistDetailsResponse], error)
+	UnlinkDatasource(context.Context, *connect.Request[myncer.UnlinkDatasourceRequest]) (*connect.Response[myncer.UnlinkDatasourceResponse], error)
 }
 
 // NewDatasourceServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -160,6 +177,12 @@ func NewDatasourceServiceHandler(svc DatasourceServiceHandler, opts ...connect.H
 		connect.WithSchema(datasourceServiceMethods.ByName("GetPlaylistDetails")),
 		connect.WithHandlerOptions(opts...),
 	)
+	datasourceServiceUnlinkDatasourceHandler := connect.NewUnaryHandler(
+		DatasourceServiceUnlinkDatasourceProcedure,
+		svc.UnlinkDatasource,
+		connect.WithSchema(datasourceServiceMethods.ByName("UnlinkDatasource")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/myncer.DatasourceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case DatasourceServiceExchangeOAuthCodeProcedure:
@@ -170,6 +193,8 @@ func NewDatasourceServiceHandler(svc DatasourceServiceHandler, opts ...connect.H
 			datasourceServiceListPlaylistsHandler.ServeHTTP(w, r)
 		case DatasourceServiceGetPlaylistDetailsProcedure:
 			datasourceServiceGetPlaylistDetailsHandler.ServeHTTP(w, r)
+		case DatasourceServiceUnlinkDatasourceProcedure:
+			datasourceServiceUnlinkDatasourceHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -193,4 +218,8 @@ func (UnimplementedDatasourceServiceHandler) ListPlaylists(context.Context, *con
 
 func (UnimplementedDatasourceServiceHandler) GetPlaylistDetails(context.Context, *connect.Request[myncer.GetPlaylistDetailsRequest]) (*connect.Response[myncer.GetPlaylistDetailsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myncer.DatasourceService.GetPlaylistDetails is not implemented"))
+}
+
+func (UnimplementedDatasourceServiceHandler) UnlinkDatasource(context.Context, *connect.Request[myncer.UnlinkDatasourceRequest]) (*connect.Response[myncer.UnlinkDatasourceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myncer.DatasourceService.UnlinkDatasource is not implemented"))
 }

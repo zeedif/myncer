@@ -16,6 +16,7 @@ func NewDatasourceService() *DatasourceService {
 		listDatasourcesHandler:    rpc_handlers.NewListDatasourcesHandler(),
 		listPlaylistsHandler:      rpc_handlers.NewListDatasourcePlaylistsHandler(),
 		getPlaylistDetailsHandler: rpc_handlers.NewGetPlaylistDetailsHandler(),
+		unlinkDatasourceHandler:   rpc_handlers.NewUnlinkDatasourceHandler(),
 	}
 }
 
@@ -35,6 +36,10 @@ type DatasourceService struct {
 	getPlaylistDetailsHandler core.GrpcHandler[
 		*myncer_pb.GetPlaylistDetailsRequest,
 		*myncer_pb.GetPlaylistDetailsResponse,
+	]
+	unlinkDatasourceHandler core.GrpcHandler[
+		*myncer_pb.UnlinkDatasourceRequest,
+		*myncer_pb.UnlinkDatasourceResponse,
 	]
 }
 
@@ -66,4 +71,11 @@ func (d *DatasourceService) GetPlaylistDetails(
 	req *connect.Request[myncer_pb.GetPlaylistDetailsRequest],
 ) (*connect.Response[myncer_pb.GetPlaylistDetailsResponse], error) {
 	return OrchestrateHandler(ctx, d.getPlaylistDetailsHandler, req.Msg)
+}
+
+func (d *DatasourceService) UnlinkDatasource(
+	ctx context.Context,
+	req *connect.Request[myncer_pb.UnlinkDatasourceRequest],
+) (*connect.Response[myncer_pb.UnlinkDatasourceResponse], error) {
+	return OrchestrateHandler(ctx, d.unlinkDatasourceHandler, req.Msg)
 }

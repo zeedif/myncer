@@ -25,6 +25,7 @@ type DatasourceTokenStore interface {
 		datasource myncer_pb.Datasource,
 	) (*myncer_pb.OAuthToken, error)
 	GetConnectedDatasources(ctx context.Context, userId string) (Set[myncer_pb.Datasource], error)
+	DeleteToken(ctx context.Context, userId string, datasource myncer_pb.Datasource) error
 }
 
 func NewDatasourceTokenStore(db *sql.DB) DatasourceTokenStore {
@@ -153,4 +154,26 @@ func (d *datasourceTokenStoreImpl) getTokensInternal(
 		r = append(r, &oAuthToken)
 	}
 	return r, nil
+}
+
+func (d *datasourceTokenStoreImpl) DeleteToken(ctx context.Context, userId string, datasource myncer_pb.Datasource) error {
+	res, err := d.db.ExecContext(
+		ctx,
+		`DELETE FROM datasource_tokens WHERE user_id = $1 AND datasource = $2`,
+		userId,
+		datasource.String(),
+	)
+	if err != nil {
+		return WrappedError(err, "failed to delete oauth token from sql")
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return WrappedError(err, "failed to check rows affected after delete")
+	}
+	if rowsAffected == 0 {
+		return NewError("no token found to delete for user %s and datasource %s", userId, datasource.String())
+	}
+
+	return nil
 }
