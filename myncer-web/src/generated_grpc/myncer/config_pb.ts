@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file myncer/config.proto.
  */
 export const file_myncer_config: GenFile = /*@__PURE__*/
-  fileDesc("ChNteW5jZXIvY29uZmlnLnByb3RvEgZteW5jZXIi+wEKBkNvbmZpZxIvCg9kYXRhYmFzZV9jb25maWcYASABKAsyFi5teW5jZXIuRGF0YWJhc2VDb25maWcSJwoLc2VydmVyX21vZGUYAiABKA4yEi5teW5jZXIuU2VydmVyTW9kZRISCgpqd3Rfc2VjcmV0GAMgASgJEi0KDnNwb3RpZnlfY29uZmlnGAQgASgLMhUubXluY2VyLlNwb3RpZnlDb25maWcSLQoOeW91dHViZV9jb25maWcYBSABKAsyFS5teW5jZXIuWW91dHViZUNvbmZpZxIlCgpsbG1fY29uZmlnGAYgASgLMhEubXluY2VyLkxsbUNvbmZpZyIpCgdDb25maWdzEh4KBmNvbmZpZxgBIAMoCzIOLm15bmNlci5Db25maWciJgoORGF0YWJhc2VDb25maWcSFAoMZGF0YWJhc2VfdXJsGAEgASgJIk8KDVNwb3RpZnlDb25maWcSEQoJY2xpZW50X2lkGAEgASgJEhUKDWNsaWVudF9zZWNyZXQYAiABKAkSFAoMcmVkaXJlY3RfdXJpGAMgASgJIk8KDVlvdXR1YmVDb25maWcSEQoJY2xpZW50X2lkGAEgASgJEhUKDWNsaWVudF9zZWNyZXQYAiABKAkSFAoMcmVkaXJlY3RfdXJpGAMgASgJIqcBCglMbG1Db25maWcSDwoHZW5hYmxlZBgBIAEoCBIvChJwcmVmZXJyZWRfcHJvdmlkZXIYAiABKA4yEy5teW5jZXIuTGxtUHJvdmlkZXISKwoNZ2VtaW5pX2NvbmZpZxgDIAEoCzIULm15bmNlci5HZW1pbmlDb25maWcSKwoNb3BlbmFpX2NvbmZpZxgEIAEoCzIULm15bmNlci5PcGVuQUlDb25maWciHwoMR2VtaW5pQ29uZmlnEg8KB2FwaV9rZXkYASABKAkiHwoMT3BlbkFJQ29uZmlnEg8KB2FwaV9rZXkYAiABKAkqMAoKU2VydmVyTW9kZRIPCgtVTlNQRUNJRklFRBAAEggKBFBST0QQARIHCgNERVYQAipDCgtMbG1Qcm92aWRlchIcChhMTE1fUFJPVklERVJfVU5TUEVDSUZJRUQQABIKCgZHRU1JTkkQARIKCgZPUEVOQUkQAkIzWjFnaXRodWIuY29tL2hhbnNiYWxhL215bmNlci9wcm90by9teW5jZXI7bXluY2VyX3BiYgZwcm90bzM");
+  fileDesc("ChNteW5jZXIvY29uZmlnLnByb3RvEgZteW5jZXIipgIKBkNvbmZpZxIvCg9kYXRhYmFzZV9jb25maWcYASABKAsyFi5teW5jZXIuRGF0YWJhc2VDb25maWcSJwoLc2VydmVyX21vZGUYAiABKA4yEi5teW5jZXIuU2VydmVyTW9kZRISCgpqd3Rfc2VjcmV0GAMgASgJEi0KDnNwb3RpZnlfY29uZmlnGAQgASgLMhUubXluY2VyLlNwb3RpZnlDb25maWcSLQoOeW91dHViZV9jb25maWcYBSABKAsyFS5teW5jZXIuWW91dHViZUNvbmZpZxIlCgpsbG1fY29uZmlnGAYgASgLMhEubXluY2VyLkxsbUNvbmZpZxIpCgx0aWRhbF9jb25maWcYByABKAsyEy5teW5jZXIuVGlkYWxDb25maWciKQoHQ29uZmlncxIeCgZjb25maWcYASADKAsyDi5teW5jZXIuQ29uZmlnIiYKDkRhdGFiYXNlQ29uZmlnEhQKDGRhdGFiYXNlX3VybBgBIAEoCSJPCg1TcG90aWZ5Q29uZmlnEhEKCWNsaWVudF9pZBgBIAEoCRIVCg1jbGllbnRfc2VjcmV0GAIgASgJEhQKDHJlZGlyZWN0X3VyaRgDIAEoCSJPCg1Zb3V0dWJlQ29uZmlnEhEKCWNsaWVudF9pZBgBIAEoCRIVCg1jbGllbnRfc2VjcmV0GAIgASgJEhQKDHJlZGlyZWN0X3VyaRgDIAEoCSJNCgtUaWRhbENvbmZpZxIRCgljbGllbnRfaWQYASABKAkSFQoNY2xpZW50X3NlY3JldBgCIAEoCRIUCgxyZWRpcmVjdF91cmkYAyABKAkipwEKCUxsbUNvbmZpZxIPCgdlbmFibGVkGAEgASgIEi8KEnByZWZlcnJlZF9wcm92aWRlchgCIAEoDjITLm15bmNlci5MbG1Qcm92aWRlchIrCg1nZW1pbmlfY29uZmlnGAMgASgLMhQubXluY2VyLkdlbWluaUNvbmZpZxIrCg1vcGVuYWlfY29uZmlnGAQgASgLMhQubXluY2VyLk9wZW5BSUNvbmZpZyIfCgxHZW1pbmlDb25maWcSDwoHYXBpX2tleRgBIAEoCSIfCgxPcGVuQUlDb25maWcSDwoHYXBpX2tleRgCIAEoCSowCgpTZXJ2ZXJNb2RlEg8KC1VOU1BFQ0lGSUVEEAASCAoEUFJPRBABEgcKA0RFVhACKkMKC0xsbVByb3ZpZGVyEhwKGExMTV9QUk9WSURFUl9VTlNQRUNJRklFRBAAEgoKBkdFTUlOSRABEgoKBk9QRU5BSRACQjNaMWdpdGh1Yi5jb20vaGFuc2JhbGEvbXluY2VyL3Byb3RvL215bmNlcjtteW5jZXJfcGJiBnByb3RvMw");
 
 /**
  * @generated from message myncer.Config
@@ -51,6 +51,11 @@ export type Config = Message<"myncer.Config"> & {
    * @generated from field: myncer.LlmConfig llm_config = 6;
    */
   llmConfig?: LlmConfig;
+
+  /**
+   * @generated from field: myncer.TidalConfig tidal_config = 7;
+   */
+  tidalConfig?: TidalConfig;
 };
 
 /**
@@ -153,6 +158,33 @@ export const YoutubeConfigSchema: GenMessage<YoutubeConfig> = /*@__PURE__*/
   messageDesc(file_myncer_config, 4);
 
 /**
+ * @generated from message myncer.TidalConfig
+ */
+export type TidalConfig = Message<"myncer.TidalConfig"> & {
+  /**
+   * @generated from field: string client_id = 1;
+   */
+  clientId: string;
+
+  /**
+   * @generated from field: string client_secret = 2;
+   */
+  clientSecret: string;
+
+  /**
+   * @generated from field: string redirect_uri = 3;
+   */
+  redirectUri: string;
+};
+
+/**
+ * Describes the message myncer.TidalConfig.
+ * Use `create(TidalConfigSchema)` to create a new message.
+ */
+export const TidalConfigSchema: GenMessage<TidalConfig> = /*@__PURE__*/
+  messageDesc(file_myncer_config, 5);
+
+/**
  * @generated from message myncer.LlmConfig
  */
 export type LlmConfig = Message<"myncer.LlmConfig"> & {
@@ -188,7 +220,7 @@ export type LlmConfig = Message<"myncer.LlmConfig"> & {
  * Use `create(LlmConfigSchema)` to create a new message.
  */
 export const LlmConfigSchema: GenMessage<LlmConfig> = /*@__PURE__*/
-  messageDesc(file_myncer_config, 5);
+  messageDesc(file_myncer_config, 6);
 
 /**
  * @generated from message myncer.GeminiConfig
@@ -205,7 +237,7 @@ export type GeminiConfig = Message<"myncer.GeminiConfig"> & {
  * Use `create(GeminiConfigSchema)` to create a new message.
  */
 export const GeminiConfigSchema: GenMessage<GeminiConfig> = /*@__PURE__*/
-  messageDesc(file_myncer_config, 6);
+  messageDesc(file_myncer_config, 7);
 
 /**
  * @generated from message myncer.OpenAIConfig
@@ -222,7 +254,7 @@ export type OpenAIConfig = Message<"myncer.OpenAIConfig"> & {
  * Use `create(OpenAIConfigSchema)` to create a new message.
  */
 export const OpenAIConfigSchema: GenMessage<OpenAIConfig> = /*@__PURE__*/
-  messageDesc(file_myncer_config, 7);
+  messageDesc(file_myncer_config, 8);
 
 /**
  * @generated from enum myncer.ServerMode

@@ -45,8 +45,8 @@ func (s *songStoreImpl) AddSong(ctx context.Context, song *myncer_pb.Song /*cons
 }
 
 func (s *songStoreImpl) GetSong(
-	ctx context.Context, 
-	id string, 
+	ctx context.Context,
+	id string,
 	datasource myncer_pb.Datasource,
 ) (*myncer_pb.Song, error) {
 	songs, err := s.getSongsInternal(ctx, NewSet(id), NewSet(datasource))
@@ -71,7 +71,7 @@ func (s *songStoreImpl) getSongsInternal(
 	args := []any{}
 	if ids != nil && !ids.IsEmpty() {
 		conditions = append(
-			conditions, 
+			conditions,
 			fmt.Sprintf("id IN (%s)", makePlaceholders(len(args), ids.ToArray())),
 		)
 		for _, id := range ids.ToArray() {

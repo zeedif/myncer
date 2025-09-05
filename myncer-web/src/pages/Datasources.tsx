@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { PageLoader } from "@/components/ui/page-loader"
 import { Datasource } from "@/generated_grpc/myncer/datasource_pb"
 import { useDatasources } from "@/hooks/useDatasources"
-import { getSpotifyAuthUrl, getYoutubeAuthUrl } from "@/lib/utils"
+import { getSpotifyAuthUrl, getYoutubeAuthUrl, getTidalAuthUrl } from "@/lib/utils"
 import { ArrowRightIcon, CheckIcon } from "lucide-react"
 
 export const Datasources = () => {
@@ -13,6 +13,9 @@ export const Datasources = () => {
   }
   const handleConnectYoutube = () => {
     window.location.href = getYoutubeAuthUrl()
+  }
+  const handleConnectTidal = () => {
+    window.location.href = getTidalAuthUrl()
   }
   const { datasources, loading } = useDatasources()
 
@@ -61,6 +64,24 @@ export const Datasources = () => {
                 <CheckIcon className="h-5 w-5 text-green-600" />
               ) : (
                 <Button onClick={handleConnectYoutube} className="flex items-center gap-1">
+                  Connect
+                  <ArrowRightIcon className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Tidal</h2>
+                <p className="text-sm text-muted-foreground">
+                  Connect account to sync playlists.
+                </p>
+              </div>
+              {datasources?.some((ds) => ds === Datasource.TIDAL) ? (
+                <CheckIcon className="h-5 w-5 text-green-600" />
+              ) : (
+                <Button onClick={handleConnectTidal} className="flex items-center gap-1">
                   Connect
                   <ArrowRightIcon className="w-4 h-4" />
                 </Button>

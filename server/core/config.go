@@ -102,6 +102,13 @@ func tryLoadConfigFromEnv() (*myncer_pb.Config, bool) {
 		RedirectUri: getRequiredEnv("YOUTUBE_REDIRECT_URI"),
 	}
 
+	// --- Tidal Configuration ---
+	tidalConfig := &myncer_pb.TidalConfig{
+		ClientId: getRequiredEnv("TIDAL_CLIENT_ID"),
+		ClientSecret: getRequiredEnv("TIDAL_CLIENT_SECRET"),
+		RedirectUri: getRequiredEnv("TIDAL_REDIRECT_URI"),
+	}
+
 	// --- LLM Configuration ---
 	llmEnabled := getEnvAsBool("LLM_ENABLED", false)
 	var llmConfig *myncer_pb.LlmConfig
@@ -146,6 +153,7 @@ func tryLoadConfigFromEnv() (*myncer_pb.Config, bool) {
 		JwtSecret: jwtSecret,
 		SpotifyConfig: spotifyConfig,
 		YoutubeConfig: youtubeConfig,
+		TidalConfig: tidalConfig,
 		LlmConfig: llmConfig,
 	}
 

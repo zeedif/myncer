@@ -18,6 +18,7 @@ type MyncerCtx struct {
 type DatasourceClients struct {
 	SpotifyClient DatasourceClient
 	YoutubeClient DatasourceClient
+	TidalClient   DatasourceClient
 }
 
 type LlmClients struct {
@@ -37,6 +38,7 @@ func MustGetMyncerCtx(
 		DatasourceClients: &DatasourceClients{
 			SpotifyClient: datasourceClients.SpotifyClient,
 			YoutubeClient: datasourceClients.YoutubeClient,
+			TidalClient:   datasourceClients.TidalClient,
 		},
 		LlmClient: MustGetLlmClient(ctx, llmClients, config),
 	}

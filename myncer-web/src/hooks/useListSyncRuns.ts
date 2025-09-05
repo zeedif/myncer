@@ -7,7 +7,7 @@ export const useListSyncRuns = () => {
   // Sort by createdAt in descending order.
   const sortedSyncRuns = syncRunsResponse?.syncRuns?.sort((a, b) => {
     if (!a.createdAt || !b.createdAt) return 0
-    return new Date(protoTimestampToDate(b.createdAt)).getTime() - 
+    return new Date(protoTimestampToDate(b.createdAt)).getTime() -
       new Date(protoTimestampToDate(a.createdAt)).getTime()
   })
   return {

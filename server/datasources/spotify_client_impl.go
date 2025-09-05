@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/hansbala/myncer/core"
+	"github.com/hansbala/myncer/matching"
 	myncer_pb "github.com/hansbala/myncer/proto/myncer"
 	"github.com/hansbala/myncer/sync_engine"
 )
@@ -209,51 +210,102 @@ func (s *spotifyClientImpl) ClearPlaylist(
 	return nil
 }
 
+// buildSpotifyQueries builds a list of search strings from most specific to most general.
+func buildSpotifyQueries(songToSearch core.Song) []string {
+	queries := []string{}
+	cleanTrack := matching.Clean(songToSearch.GetName())
+
+	cleanArtists := []string{}
+	for _, artist := range songToSearch.GetArtistNames() {
+		cleanArtists = append(cleanArtists, matching.Clean(artist))
+	}
+	cleanArtist := strings.Join(cleanArtists, " ")
+
+	cleanAlbum := matching.Clean(songToSearch.GetAlbum())
+
+	// Most specific: Title + Artist + Album
+	if cleanTrack != "" && cleanArtist != "" && cleanAlbum != "" {
+		queries = append(queries, fmt.Sprintf("track:\"%s\" artist:\"%s\" album:\"%s\"", cleanTrack, cleanArtist, cleanAlbum))
+	}
+	// Title + Artist
+	if cleanTrack != "" && cleanArtist != "" {
+		queries = append(queries, fmt.Sprintf("track:\"%s\" artist:\"%s\"", cleanTrack, cleanArtist))
+	}
+	// Title + Album
+	if cleanTrack != "" && cleanAlbum != "" {
+		queries = append(queries, fmt.Sprintf("track:\"%s\" album:\"%s\"", cleanTrack, cleanAlbum))
+	}
+	// Only Title
+	if cleanTrack != "" {
+		queries = append(queries, fmt.Sprintf("track:\"%s\"", cleanTrack))
+	}
+
+	return queries
+}
+
 func (s *spotifyClientImpl) Search(
 	ctx context.Context,
-	userInfo *myncer_pb.User, /*const*/
-	names core.Set[string], /*const,@nullable*/ // nil, empty indicates no filtering.
-	_ core.Set[string], /*const,@nullable*/ // nil, empty indicates no filtering.
-	_ core.Set[string], /*const,@nullable*/ // nil, empty indicates no filtering.
+	userInfo *myncer_pb.User,
+	names core.Set[string],
+	artistNames core.Set[string],
+	albumNames core.Set[string],
 ) (core.Song, error) {
 	client, err := s.getClient(ctx, userInfo)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get spotify client")
 	}
 
-	// Build OR-grouped qualifiers
-	var clauses []string
+	// Build a `core.Song` representation for the search.
+	songToSearch := sync_engine.NewSong(&myncer_pb.Song{
+		Name:       names.ToArray()[0], // Assuming a single name for simplicity
+		ArtistName: artistNames.ToArray(),
+		AlbumName:  albumNames.ToArray()[0], // Assuming a single album
+	})
 
-	// track names
-	if names != nil {
-		raw := names.ToArray()
-		filtered := filterEmpty(raw)
-		if len(filtered) > 0 {
-			var terms []string
-			for _, n := range filtered {
-				terms = append(terms, fmt.Sprintf(`track:%q`, n))
-			}
-			clauses = append(clauses, "("+strings.Join(terms, " OR ")+")")
+	// First, if the original song has an ISRC, we use it.
+	if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {
+		query := fmt.Sprintf("isrc:%s", isrc)
+		searchResult, err := client.Search(ctx, query, spotify.SearchTypeTrack, spotify.Limit(1))
+		if err == nil && searchResult.Tracks != nil && len(searchResult.Tracks.Tracks) > 0 {
+			return buildSongFromSpotifyTrack(ctx, &searchResult.Tracks.Tracks[0]), nil
 		}
 	}
 
-	if len(clauses) == 0 {
-		return nil, core.NewError("at least one of name, artist, or album must be provided")
+	// If no ISRC or it fails, proceed with metadata search.
+	queries := buildSpotifyQueries(songToSearch)
+	var bestMatch core.Song
+	highestScore := 0.0
+
+	for _, query := range queries {
+		searchResult, err := client.Search(ctx, query, spotify.SearchTypeTrack, spotify.Limit(5))
+		if err != nil {
+			core.Warningf("Spotify search failed for query %q, trying next. Error: %v", query, err)
+			continue
+		}
+
+		if searchResult.Tracks != nil {
+			for _, track := range searchResult.Tracks.Tracks {
+				foundSong := buildSongFromSpotifyTrack(ctx, &track)
+				score := matching.CalculateSimilarity(songToSearch, foundSong)
+
+				if score > highestScore {
+					highestScore = score
+					bestMatch = foundSong
+				}
+
+				// If we find a nearly perfect match, we can stop.
+				if highestScore > 95.0 {
+					return bestMatch, nil
+				}
+			}
+		}
 	}
 
-	query := strings.Join(clauses, " OR ")
-	// Example result:
-	//   (track:"Pressure") OR (artist:"Martin Garrix" OR artist:"Tove Lo")
-
-	searchResult, err := client.Search(ctx, query, spotify.SearchTypeTrack, spotify.Limit(1))
-	if err != nil {
-		return nil, core.WrappedError(err, "spotify search failed for query %q", query)
-	}
-	if searchResult.Tracks == nil || len(searchResult.Tracks.Tracks) == 0 {
-		return nil, core.NewError("no track found for query %q", query)
+	if bestMatch == nil {
+		return nil, core.NewError("no suitable track found after trying all queries for: %s", songToSearch.GetName())
 	}
 
-	return buildSongFromSpotifyTrack(ctx, &searchResult.Tracks.Tracks[0]), nil
+	return bestMatch, nil
 }
 
 func (s *spotifyClientImpl) getClient(
@@ -298,15 +350,22 @@ func (s *spotifyClientImpl) getOAuthConfig(ctx context.Context) *oauth2.Config {
 
 func buildSongFromSpotifyTrack(
 	_ context.Context,
-	track *spotify.FullTrack, /*const*/
+	track *spotify.FullTrack,
 ) core.Song {
+	isrc, _ := track.ExternalIDs["isrc"]
+	var artists []string
+	for _, artist := range track.Artists {
+		artists = append(artists, artist.Name)
+	}
+
 	return sync_engine.NewSong(
 		&myncer_pb.Song{
 			Name:             track.Name,
-			ArtistName:       []string{track.Artists[0].Name},
+			ArtistName:       artists,
 			AlbumName:        track.Album.Name,
 			Datasource:       myncer_pb.Datasource_DATASOURCE_SPOTIFY,
 			DatasourceSongId: track.ID.String(),
+			Isrc:             isrc,
 		},
 	)
 }

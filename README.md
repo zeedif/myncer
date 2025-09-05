@@ -1,4 +1,4 @@
-# Myncer 
+# Myncer
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/hansbala/myncer/master/myncer-web/public/myncer.png" alt="Myncer Logo" width="200"/>

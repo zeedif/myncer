@@ -62,6 +62,8 @@ func (l *listDatasourcePlaylistsImpl) getClientFromDatasource(
 		return dsClients.SpotifyClient, nil
 	case myncer_pb.Datasource_DATASOURCE_YOUTUBE:
 		return dsClients.YoutubeClient, nil
+	case myncer_pb.Datasource_DATASOURCE_TIDAL:
+		return dsClients.TidalClient, nil
 	default:
 		return nil, core.NewError("unsupported datasource: %v", ds)
 	}

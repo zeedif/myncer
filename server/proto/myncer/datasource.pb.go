@@ -27,6 +27,7 @@ const (
 	Datasource_DATASOURCE_UNSPECIFIED Datasource = 0
 	Datasource_DATASOURCE_SPOTIFY     Datasource = 1
 	Datasource_DATASOURCE_YOUTUBE     Datasource = 2
+	Datasource_DATASOURCE_TIDAL       Datasource = 3
 )
 
 // Enum value maps for Datasource.
@@ -35,11 +36,13 @@ var (
 		0: "DATASOURCE_UNSPECIFIED",
 		1: "DATASOURCE_SPOTIFY",
 		2: "DATASOURCE_YOUTUBE",
+		3: "DATASOURCE_TIDAL",
 	}
 	Datasource_value = map[string]int32{
 		"DATASOURCE_UNSPECIFIED": 0,
 		"DATASOURCE_SPOTIFY":     1,
 		"DATASOURCE_YOUTUBE":     2,
+		"DATASOURCE_TIDAL":       3,
 	}
 )
 
@@ -667,12 +670,13 @@ const file_myncer_datasource_proto_rawDesc = "" +
 	"datasource\x18\x01 \x01(\x0e2\x12.myncer.DatasourceR\n" +
 	"datasource\x12\x1f\n" +
 	"\vplaylist_id\x18\x02 \x01(\tR\n" +
-	"playlistId*X\n" +
+	"playlistId*n\n" +
 	"\n" +
 	"Datasource\x12\x1a\n" +
 	"\x16DATASOURCE_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12DATASOURCE_SPOTIFY\x10\x01\x12\x16\n" +
-	"\x12DATASOURCE_YOUTUBE\x10\x02*\x85\x01\n" +
+	"\x12DATASOURCE_YOUTUBE\x10\x02\x12\x14\n" +
+	"\x10DATASOURCE_TIDAL\x10\x03*\x85\x01\n" +
 	"\x13OAuthExchangeStatus\x12&\n" +
 	"\"O_AUTH_EXCHANGE_STATUS_UNSPECIFIED\x10\x00\x12\"\n" +
 	"\x1eO_AUTH_EXCHANGE_STATUS_SUCCESS\x10\x01\x12\"\n" +

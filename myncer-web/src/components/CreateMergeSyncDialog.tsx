@@ -63,7 +63,7 @@ export const CreateMergeSyncDialog = () => {
   } = useListPlaylists({ datasource: targetDatasource })
 
   const onSubmit = (data: FormValues) => {
-    // Filtrar las fuentes que están completas
+    // Filter sources that are complete
     const completeSources = data.sources.filter(
       source => source.datasource && source.playlistId
     )
@@ -125,13 +125,13 @@ export const CreateMergeSyncDialog = () => {
                   <span>Add Playlist</span>
                 </Button>
               </div>
-              
+
               {fields.map((field, index) => {
                 const sourceDatasource = watchedSources[index]?.datasource
-                const { playlists: sourcePlaylists, loading: sourcePlaylistsLoading } = useListPlaylists({ 
-                  datasource: sourceDatasource 
+                const { playlists: sourcePlaylists, loading: sourcePlaylistsLoading } = useListPlaylists({
+                  datasource: sourceDatasource
                 })
-                
+
                 return (
                   <div key={field.id} className="flex items-end space-x-2 p-3 border rounded-lg">
                     <div className="flex-1 grid grid-cols-2 gap-3">

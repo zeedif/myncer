@@ -2,6 +2,8 @@ package datasources
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"strings"
 
 	"golang.org/x/oauth2"
@@ -9,6 +11,7 @@ import (
 	youtube "google.golang.org/api/youtube/v3"
 
 	"github.com/hansbala/myncer/core"
+	"github.com/hansbala/myncer/matching"
 	myncer_pb "github.com/hansbala/myncer/proto/myncer"
 	"github.com/hansbala/myncer/sync_engine"
 )
@@ -17,6 +20,9 @@ const (
 	cYouTubeAuthURL  = "https://accounts.google.com/o/oauth2/auth"
 	cYouTubeTokenURL = "https://oauth2.googleapis.com/token"
 )
+
+// Regex to find common artist separators in YouTube titles.
+var artistSeparators = regexp.MustCompile(`\s*[,&]\s*|\s+(?:feat|ft)\.?\s+`)
 
 func NewYouTubeClient() core.DatasourceClient {
 	return &youtubeClientImpl{}
@@ -202,59 +208,103 @@ func (c *youtubeClientImpl) ClearPlaylist(
 	return nil
 }
 
+// buildYouTubeQueries builds a list of search strings from most specific to most general.
+func buildYouTubeQueries(songToSearch core.Song) []string {
+	queries := []string{}
+	cleanTrack := matching.Clean(songToSearch.GetName())
+
+	cleanArtists := []string{}
+	for _, artist := range songToSearch.GetArtistNames() {
+		cleanArtists = append(cleanArtists, matching.Clean(artist))
+	}
+	cleanArtist := strings.Join(cleanArtists, " ")
+
+	cleanAlbum := matching.Clean(songToSearch.GetAlbum())
+
+	// For YouTube, it's better to use more natural queries as there are no specific operators like "track:"
+	if cleanTrack != "" && cleanArtist != "" && cleanAlbum != "" {
+		queries = append(queries, fmt.Sprintf("%s %s %s", cleanTrack, cleanArtist, cleanAlbum))
+	}
+	if cleanTrack != "" && cleanArtist != "" {
+		queries = append(queries, fmt.Sprintf("%s %s", cleanTrack, cleanArtist))
+	}
+	if cleanTrack != "" && cleanAlbum != "" {
+		queries = append(queries, fmt.Sprintf("%s %s", cleanTrack, cleanAlbum))
+	}
+	if cleanTrack != "" {
+		queries = append(queries, cleanTrack)
+	}
+
+	return queries
+}
+
 func (s *youtubeClientImpl) Search(
 	ctx context.Context,
-	userInfo *myncer_pb.User, /*const*/
-	names core.Set[string], /*const,@nullable*/ // nil, empty indicates no filtering.
-	artistNames core.Set[string], /*const,@nullable*/ // nil, empty indicates no filtering.
-	albumNames core.Set[string], /*const,@nullable*/ // nil, empty indicates no filtering.
+	userInfo *myncer_pb.User,
+	names core.Set[string],
+	artistNames core.Set[string],
+	albumNames core.Set[string],
 ) (core.Song, error) {
 	svc, err := s.getService(ctx, userInfo)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get YouTube service")
 	}
-	// Build query string
-	var queryParts []string
-	if names != nil && !names.IsEmpty() {
-		for name := range names {
-			queryParts = append(queryParts, name)
+
+	// Build a `core.Song` representation for the search.
+	songToSearch := sync_engine.NewSong(&myncer_pb.Song{
+		Name:       names.ToArray()[0], // Assuming a single name for simplicity
+		ArtistName: artistNames.ToArray(),
+		AlbumName:  albumNames.ToArray()[0], // Assuming a single album
+	})
+
+	// Search by metadata using multiple queries
+	queries := buildYouTubeQueries(songToSearch)
+	var bestMatch core.Song
+	highestScore := 0.0
+
+	for _, query := range queries {
+		call := svc.Search.List([]string{"snippet"}).
+			Q(query).
+			Type("video").
+			MaxResults(5) // We search for more results to compare
+
+		resp, err := call.Do()
+		if err != nil {
+			core.Warningf("YouTube search failed for query %q, trying next. Error: %v", query, err)
+			continue
+		}
+
+		if len(resp.Items) == 0 {
+			core.Warningf("No results found for YouTube query %q", query)
+			continue
+		}
+
+		for _, item := range resp.Items {
+			foundSong, err := buildSongFormYoutubeSearchResultItem(item)
+			if err != nil {
+				core.Warningf("Failed to build song from YouTube result: %v", err)
+				continue
+			}
+
+			score := matching.CalculateSimilarity(songToSearch, foundSong)
+
+			if score > highestScore {
+				highestScore = score
+				bestMatch = foundSong
+			}
+
+			// If we find a nearly perfect match, we can stop.
+			if highestScore > 95.0 {
+				return bestMatch, nil
+			}
 		}
 	}
-	if artistNames != nil && !artistNames.IsEmpty() {
-		for artist := range artistNames {
-			queryParts = append(queryParts, artist)
-		}
-	}
-	if albumNames != nil && !albumNames.IsEmpty() {
-		for album := range albumNames {
-			queryParts = append(queryParts, album)
-		}
-	}
-	if len(queryParts) == 0 {
-		return nil, core.NewError("at least one of name, artist, or album must be provided")
-	}
-	query := strings.Join(queryParts, " ")
 
-	call := svc.Search.List([]string{"snippet"}).
-		Q(query).
-		Type("video").
-		MaxResults(1)
-
-	resp, err := call.Do()
-	if err != nil {
-		return nil, core.WrappedError(err, "failed to perform YouTube search for query %q", query)
+	if bestMatch == nil {
+		return nil, core.NewError("no suitable video found after trying all queries for: %s", songToSearch.GetName())
 	}
 
-	if len(resp.Items) == 0 {
-		return nil, core.NewError("no video found for query %q", query)
-	}
-
-	item := resp.Items[0]
-	song, err := buildSongFormYoutubeSearchResultItem(item)
-	if err != nil {
-		return nil, core.WrappedError(err, "failed to build song from YouTube search result")
-	}
-	return song, nil
+	return bestMatch, nil
 }
 
 func (c *youtubeClientImpl) getService(
@@ -293,15 +343,51 @@ func (c *youtubeClientImpl) getOAuthConfig(ctx context.Context) *oauth2.Config {
 	}
 }
 
+// parseArtistsFromYouTubeTitle attempts to extract artist names from a video title.
+// YouTube Music titles often follow patterns like "Artist - Song" or "Song (feat. Artist)".
+func parseArtistsFromYouTubeTitle(title, channelTitle string) (string, []string) {
+	// We use the general metadata cleaner first, but keep the original for splitting.
+	cleanedTitleForMatching := matching.Clean(title)
+
+	// Common case: "Artist - Title"
+	parts := strings.SplitN(title, " - ", 2)
+	if len(parts) == 2 {
+		songTitle := strings.TrimSpace(parts[1])
+		// The first part may contain multiple artists.
+		artistsStr := strings.TrimSpace(parts[0])
+		artists := artistSeparators.Split(artistsStr, -1)
+
+		// Clean and remove duplicates
+		cleanedArtists := core.NewSet[string]()
+		for _, artist := range artists {
+			if a := strings.TrimSpace(artist); a != "" {
+				cleanedArtists.Add(a)
+			}
+		}
+
+		if !cleanedArtists.IsEmpty() {
+			return songTitle, cleanedArtists.ToArray()
+		}
+	}
+
+	// If there's no clear separator, we use the cleaned title as the song name
+	// and the channel name as the artist (fallback).
+	// We remove "- Topic", which YouTube adds to many artist channels.
+	artistFallback := strings.TrimSuffix(channelTitle, " - Topic")
+	return cleanedTitleForMatching, []string{artistFallback}
+}
+
 func buildSongFromYouTubePlaylistItem(
 	pi *youtube.PlaylistItem, /*const*/
 ) core.Song {
+	cleanTitle, artists := parseArtistsFromYouTubeTitle(pi.Snippet.Title, pi.Snippet.ChannelTitle)
+
 	return sync_engine.NewSong(
 		&myncer_pb.Song{
-			Name:             pi.Snippet.Title,
-			ArtistName:       []string{pi.Snippet.ChannelTitle},
+			Name:             cleanTitle,
+			ArtistName:       artists,
 			Datasource:       myncer_pb.Datasource_DATASOURCE_YOUTUBE,
-			DatasourceSongId: pi.Id,
+			DatasourceSongId: pi.Snippet.ResourceId.VideoId, // Use the VideoId as the ID
 		},
 	)
 }
@@ -315,11 +401,13 @@ func buildSongFormYoutubeSearchResultItem(
 	} else {
 		return nil, core.NewError("missing video ID in YouTube search result")
 	}
+
+	cleanTitle, artists := parseArtistsFromYouTubeTitle(item.Snippet.Title, item.Snippet.ChannelTitle)
+
 	return sync_engine.NewSong(
 		&myncer_pb.Song{
-			Name: strings.TrimSpace(item.Snippet.Title),
-			// best-effort: channel title often includes artist
-			ArtistName:       []string{item.Snippet.ChannelTitle},
+			Name:             cleanTitle,
+			ArtistName:       artists,
 			Datasource:       myncer_pb.Datasource_DATASOURCE_YOUTUBE,
 			DatasourceSongId: videoId,
 		},

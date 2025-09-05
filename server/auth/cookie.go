@@ -7,13 +7,22 @@ import (
 	myncer_pb "github.com/hansbala/myncer/proto/myncer"
 )
 
+func isSecure(mode myncer_pb.ServerMode) bool {
+	switch mode {
+	case myncer_pb.ServerMode_DEV:
+		return false
+	default:
+		return true
+	}
+}
+
 func GetAuthCookie(jwtToken string, serverMode myncer_pb.ServerMode) *http.Cookie {
 	return &http.Cookie{
 		Name:     cJwtCookieName,
 		Value:    jwtToken,
 		Path:     "/",
 		HttpOnly: isHttpOnly(serverMode),
-		Secure:   true, // Send the cookie only over HTTPS.
+		Secure:   isSecure(serverMode),
 		SameSite: http.SameSiteStrictMode,
 		Expires:  time.Now().Add(24 * time.Hour),
 	}
@@ -25,7 +34,7 @@ func GetLogoutAuthCookie(serverMode myncer_pb.ServerMode) *http.Cookie {
 		Value:    "",
 		Path:     "/",
 		HttpOnly: isHttpOnly(serverMode),
-		Secure:   true,
+		Secure:   isSecure(serverMode),
 		SameSite: http.SameSiteStrictMode,
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,

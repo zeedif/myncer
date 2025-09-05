@@ -17,6 +17,12 @@ const youtubeScopes = [
   "https://www.googleapis.com/auth/youtube"
 ].join(" ")
 
+const tidalScopes = [
+  "r_usr",
+  "w_usr",
+  "w_sub"
+].join(" ")
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -39,12 +45,23 @@ export const getYoutubeAuthUrl = () => {
   return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}&access_type=offline&prompt=consent`
 }
 
+export const getTidalAuthUrl = () => {
+  const clientId = config.tidalClientId
+  const redirectUri = encodeURIComponent(config.tidalRedirectUri)
+  const scope = encodeURIComponent(tidalScopes)
+  const state = crypto.randomUUID() // CSRF protection
+
+  return `https://auth.tidal.com/v1/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`
+}
+
 export const getDatasourceLabel = (datasource: Datasource) => {
   switch (datasource) {
     case Datasource.SPOTIFY:
       return "Spotify"
     case Datasource.YOUTUBE:
       return "YouTube"
+    case Datasource.TIDAL:
+      return "Tidal"
     default:
       return "Unknown Datasource"
   }

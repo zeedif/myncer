@@ -14,8 +14,9 @@ message Config {
   SpotifyConfig spotify_config = 4;
   YoutubeConfig youtube_config = 5;
   LlmConfig llm_config = 6;
+  TidalConfig tidal_config = 7;
 
-  // next: 7
+  // next: 8
 }
 
 message Configs {
@@ -41,6 +42,12 @@ message SpotifyConfig {
 
 message YoutubeConfig {
   // Can be obtained from https://console.developers.google.com/apis/credentials.
+  string client_id = 1;
+  string client_secret = 2;
+  string redirect_uri = 3;
+}
+
+message TidalConfig {
   string client_id = 1;
   string client_secret = 2;
   string redirect_uri = 3;

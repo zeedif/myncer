@@ -81,6 +81,14 @@ const router = createBrowserRouter([
           </RequireAuth>
         ),
       },
+      {
+        path: "datasource/tidal/callback",
+        element: (
+          <RequireAuth>
+            <DatasourceAuthPage datasource={Datasource.TIDAL} />
+          </RequireAuth>
+        ),
+      },
     ],
   },
   {

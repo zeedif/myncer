@@ -20,11 +20,13 @@ func main() {
 	ctx := context.Background()
 	spotifyClient := datasources.NewSpotifyClient()
 	youtubeClient := datasources.NewYouTubeClient()
+	tidalClient := datasources.NewTidalClient()
 	myncerCtx := core.MustGetMyncerCtx(
 		ctx,
 		&core.DatasourceClients{
 			SpotifyClient: spotifyClient,
 			YoutubeClient: youtubeClient,
+			TidalClient:   tidalClient,
 		},
 		&core.LlmClients{
 			GeminiLlmClient: llm.NewGeminiLlmClient(),

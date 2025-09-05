@@ -62,6 +62,13 @@ func (do *datasourceOAuthExchangeImpl) ProcessRequest(
 				core.WrappedError(err, "failed to exchange oauth code"),
 			)
 		}
+	case myncer_pb.Datasource_DATASOURCE_TIDAL:
+		token, err = dsClients.TidalClient.ExchangeCodeForToken(ctx, reqBody.GetCode())
+		if err != nil {
+			return core.NewGrpcHandlerResponse_InternalServerError[*myncer_pb.ExchangeOAuthCodeResponse](
+				core.WrappedError(err, "failed to exchange oauth code"),
+			)
+		}
 	default:
 		return core.NewGrpcHandlerResponse_InternalServerError[*myncer_pb.ExchangeOAuthCodeResponse](
 			core.NewError("unsuppported datasource %v", reqBody.GetDatasource()),

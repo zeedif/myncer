@@ -130,6 +130,7 @@ type Config struct {
 	SpotifyConfig *SpotifyConfig `protobuf:"bytes,4,opt,name=spotify_config,json=spotifyConfig,proto3" json:"spotify_config,omitempty"`
 	YoutubeConfig *YoutubeConfig `protobuf:"bytes,5,opt,name=youtube_config,json=youtubeConfig,proto3" json:"youtube_config,omitempty"`
 	LlmConfig     *LlmConfig     `protobuf:"bytes,6,opt,name=llm_config,json=llmConfig,proto3" json:"llm_config,omitempty"`
+	TidalConfig   *TidalConfig   `protobuf:"bytes,7,opt,name=tidal_config,json=tidalConfig,proto3" json:"tidal_config,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -202,6 +203,13 @@ func (x *Config) GetYoutubeConfig() *YoutubeConfig {
 func (x *Config) GetLlmConfig() *LlmConfig {
 	if x != nil {
 		return x.LlmConfig
+	}
+	return nil
+}
+
+func (x *Config) GetTidalConfig() *TidalConfig {
+	if x != nil {
+		return x.TidalConfig
 	}
 	return nil
 }
@@ -416,6 +424,66 @@ func (x *YoutubeConfig) GetRedirectUri() string {
 	return ""
 }
 
+type TidalConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientSecret  string                 `protobuf:"bytes,2,opt,name=client_secret,json=clientSecret,proto3" json:"client_secret,omitempty"`
+	RedirectUri   string                 `protobuf:"bytes,3,opt,name=redirect_uri,json=redirectUri,proto3" json:"redirect_uri,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TidalConfig) Reset() {
+	*x = TidalConfig{}
+	mi := &file_myncer_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TidalConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TidalConfig) ProtoMessage() {}
+
+func (x *TidalConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_myncer_config_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TidalConfig.ProtoReflect.Descriptor instead.
+func (*TidalConfig) Descriptor() ([]byte, []int) {
+	return file_myncer_config_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *TidalConfig) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *TidalConfig) GetClientSecret() string {
+	if x != nil {
+		return x.ClientSecret
+	}
+	return ""
+}
+
+func (x *TidalConfig) GetRedirectUri() string {
+	if x != nil {
+		return x.RedirectUri
+	}
+	return ""
+}
+
 type LlmConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Whether LLM has been enabled or not.
@@ -431,7 +499,7 @@ type LlmConfig struct {
 
 func (x *LlmConfig) Reset() {
 	*x = LlmConfig{}
-	mi := &file_myncer_config_proto_msgTypes[5]
+	mi := &file_myncer_config_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -443,7 +511,7 @@ func (x *LlmConfig) String() string {
 func (*LlmConfig) ProtoMessage() {}
 
 func (x *LlmConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_config_proto_msgTypes[5]
+	mi := &file_myncer_config_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -456,7 +524,7 @@ func (x *LlmConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LlmConfig.ProtoReflect.Descriptor instead.
 func (*LlmConfig) Descriptor() ([]byte, []int) {
-	return file_myncer_config_proto_rawDescGZIP(), []int{5}
+	return file_myncer_config_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LlmConfig) GetEnabled() bool {
@@ -496,7 +564,7 @@ type GeminiConfig struct {
 
 func (x *GeminiConfig) Reset() {
 	*x = GeminiConfig{}
-	mi := &file_myncer_config_proto_msgTypes[6]
+	mi := &file_myncer_config_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -508,7 +576,7 @@ func (x *GeminiConfig) String() string {
 func (*GeminiConfig) ProtoMessage() {}
 
 func (x *GeminiConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_config_proto_msgTypes[6]
+	mi := &file_myncer_config_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -521,7 +589,7 @@ func (x *GeminiConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GeminiConfig.ProtoReflect.Descriptor instead.
 func (*GeminiConfig) Descriptor() ([]byte, []int) {
-	return file_myncer_config_proto_rawDescGZIP(), []int{6}
+	return file_myncer_config_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GeminiConfig) GetApiKey() string {
@@ -540,7 +608,7 @@ type OpenAIConfig struct {
 
 func (x *OpenAIConfig) Reset() {
 	*x = OpenAIConfig{}
-	mi := &file_myncer_config_proto_msgTypes[7]
+	mi := &file_myncer_config_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -552,7 +620,7 @@ func (x *OpenAIConfig) String() string {
 func (*OpenAIConfig) ProtoMessage() {}
 
 func (x *OpenAIConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_myncer_config_proto_msgTypes[7]
+	mi := &file_myncer_config_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -565,7 +633,7 @@ func (x *OpenAIConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OpenAIConfig.ProtoReflect.Descriptor instead.
 func (*OpenAIConfig) Descriptor() ([]byte, []int) {
-	return file_myncer_config_proto_rawDescGZIP(), []int{7}
+	return file_myncer_config_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *OpenAIConfig) GetApiKey() string {
@@ -579,7 +647,7 @@ var File_myncer_config_proto protoreflect.FileDescriptor
 
 const file_myncer_config_proto_rawDesc = "" +
 	"\n" +
-	"\x13myncer/config.proto\x12\x06myncer\"\xcb\x02\n" +
+	"\x13myncer/config.proto\x12\x06myncer\"\x83\x03\n" +
 	"\x06Config\x12?\n" +
 	"\x0fdatabase_config\x18\x01 \x01(\v2\x16.myncer.DatabaseConfigR\x0edatabaseConfig\x123\n" +
 	"\vserver_mode\x18\x02 \x01(\x0e2\x12.myncer.ServerModeR\n" +
@@ -589,7 +657,8 @@ const file_myncer_config_proto_rawDesc = "" +
 	"\x0espotify_config\x18\x04 \x01(\v2\x15.myncer.SpotifyConfigR\rspotifyConfig\x12<\n" +
 	"\x0eyoutube_config\x18\x05 \x01(\v2\x15.myncer.YoutubeConfigR\ryoutubeConfig\x120\n" +
 	"\n" +
-	"llm_config\x18\x06 \x01(\v2\x11.myncer.LlmConfigR\tllmConfig\"1\n" +
+	"llm_config\x18\x06 \x01(\v2\x11.myncer.LlmConfigR\tllmConfig\x126\n" +
+	"\ftidal_config\x18\a \x01(\v2\x13.myncer.TidalConfigR\vtidalConfig\"1\n" +
 	"\aConfigs\x12&\n" +
 	"\x06config\x18\x01 \x03(\v2\x0e.myncer.ConfigR\x06config\"3\n" +
 	"\x0eDatabaseConfig\x12!\n" +
@@ -599,6 +668,10 @@ const file_myncer_config_proto_rawDesc = "" +
 	"\rclient_secret\x18\x02 \x01(\tR\fclientSecret\x12!\n" +
 	"\fredirect_uri\x18\x03 \x01(\tR\vredirectUri\"t\n" +
 	"\rYoutubeConfig\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12#\n" +
+	"\rclient_secret\x18\x02 \x01(\tR\fclientSecret\x12!\n" +
+	"\fredirect_uri\x18\x03 \x01(\tR\vredirectUri\"r\n" +
+	"\vTidalConfig\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12#\n" +
 	"\rclient_secret\x18\x02 \x01(\tR\fclientSecret\x12!\n" +
 	"\fredirect_uri\x18\x03 \x01(\tR\vredirectUri\"\xdf\x01\n" +
@@ -636,7 +709,7 @@ func file_myncer_config_proto_rawDescGZIP() []byte {
 }
 
 var file_myncer_config_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_myncer_config_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_myncer_config_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_myncer_config_proto_goTypes = []any{
 	(ServerMode)(0),        // 0: myncer.ServerMode
 	(LlmProvider)(0),       // 1: myncer.LlmProvider
@@ -645,25 +718,27 @@ var file_myncer_config_proto_goTypes = []any{
 	(*DatabaseConfig)(nil), // 4: myncer.DatabaseConfig
 	(*SpotifyConfig)(nil),  // 5: myncer.SpotifyConfig
 	(*YoutubeConfig)(nil),  // 6: myncer.YoutubeConfig
-	(*LlmConfig)(nil),      // 7: myncer.LlmConfig
-	(*GeminiConfig)(nil),   // 8: myncer.GeminiConfig
-	(*OpenAIConfig)(nil),   // 9: myncer.OpenAIConfig
+	(*TidalConfig)(nil),    // 7: myncer.TidalConfig
+	(*LlmConfig)(nil),      // 8: myncer.LlmConfig
+	(*GeminiConfig)(nil),   // 9: myncer.GeminiConfig
+	(*OpenAIConfig)(nil),   // 10: myncer.OpenAIConfig
 }
 var file_myncer_config_proto_depIdxs = []int32{
-	4, // 0: myncer.Config.database_config:type_name -> myncer.DatabaseConfig
-	0, // 1: myncer.Config.server_mode:type_name -> myncer.ServerMode
-	5, // 2: myncer.Config.spotify_config:type_name -> myncer.SpotifyConfig
-	6, // 3: myncer.Config.youtube_config:type_name -> myncer.YoutubeConfig
-	7, // 4: myncer.Config.llm_config:type_name -> myncer.LlmConfig
-	2, // 5: myncer.Configs.config:type_name -> myncer.Config
-	1, // 6: myncer.LlmConfig.preferred_provider:type_name -> myncer.LlmProvider
-	8, // 7: myncer.LlmConfig.gemini_config:type_name -> myncer.GeminiConfig
-	9, // 8: myncer.LlmConfig.openai_config:type_name -> myncer.OpenAIConfig
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	4,  // 0: myncer.Config.database_config:type_name -> myncer.DatabaseConfig
+	0,  // 1: myncer.Config.server_mode:type_name -> myncer.ServerMode
+	5,  // 2: myncer.Config.spotify_config:type_name -> myncer.SpotifyConfig
+	6,  // 3: myncer.Config.youtube_config:type_name -> myncer.YoutubeConfig
+	8,  // 4: myncer.Config.llm_config:type_name -> myncer.LlmConfig
+	7,  // 5: myncer.Config.tidal_config:type_name -> myncer.TidalConfig
+	2,  // 6: myncer.Configs.config:type_name -> myncer.Config
+	1,  // 7: myncer.LlmConfig.preferred_provider:type_name -> myncer.LlmProvider
+	9,  // 8: myncer.LlmConfig.gemini_config:type_name -> myncer.GeminiConfig
+	10, // 9: myncer.LlmConfig.openai_config:type_name -> myncer.OpenAIConfig
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_myncer_config_proto_init() }
@@ -677,7 +752,7 @@ func file_myncer_config_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_myncer_config_proto_rawDesc), len(file_myncer_config_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

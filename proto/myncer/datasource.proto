@@ -15,6 +15,7 @@ enum Datasource {
   DATASOURCE_UNSPECIFIED = 0;
   DATASOURCE_SPOTIFY = 1;
   DATASOURCE_YOUTUBE = 2;
+  DATASOURCE_TIDAL = 3;
 }
 
 message ExchangeOAuthCodeRequest {

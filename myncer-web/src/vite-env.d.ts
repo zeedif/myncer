@@ -5,6 +5,8 @@ interface MyncerConfig {
   VITE_SPOTIFY_REDIRECT_URI: string;
   VITE_YOUTUBE_CLIENT_ID: string;
   VITE_YOUTUBE_REDIRECT_URI: string;
+  VITE_TIDAL_CLIENT_ID: string;
+  VITE_TIDAL_REDIRECT_URI: string;
 }
 
 interface Window {

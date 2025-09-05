@@ -58,6 +58,11 @@ services:
       - YOUTUBE_CLIENT_SECRET=your_youtube_client_secret # <-- IMPORTANT: Replace this
       - YOUTUBE_REDIRECT_URI=http://localhost/datasource/youtube/callback
 
+      # --- Tidal OAuth Credentials ---
+      - TIDAL_CLIENT_ID=your_tidal_client_id # <-- IMPORTANT: Replace this
+      - TIDAL_CLIENT_SECRET=your_tidal_client_secret # <-- IMPORTANT: Replace this
+      - TIDAL_REDIRECT_URI=http://localhost/datasource/tidal/callback
+
       # --- LLM (Optional) ---
       - LLM_ENABLED=false
       - LLM_PROVIDER=GEMINI  # Options: GEMINI, OPENAI
@@ -83,6 +88,8 @@ services:
       - VITE_SPOTIFY_REDIRECT_URI=http://localhost/datasource/spotify/callback
       - VITE_YOUTUBE_CLIENT_ID=your_youtube_client_id
       - VITE_YOUTUBE_REDIRECT_URI=http://localhost/datasource/youtube/callback
+      - VITE_TIDAL_CLIENT_ID=your_tidal_client_id
+      - VITE_TIDAL_REDIRECT_URI=http://localhost/datasource/tidal/callback
 
 volumes:
   pgdata:
