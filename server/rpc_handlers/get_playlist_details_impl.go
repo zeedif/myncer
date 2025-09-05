@@ -52,6 +52,13 @@ func (l *getPlaylistDetailsImpl) ProcessRequest(
 				core.WrappedError(err, "failed to get YouTube playlist"),
 			)
 		}
+	case myncer_pb.Datasource_DATASOURCE_TIDAL:
+		playlist, err = dsClients.TidalClient.GetPlaylist(ctx, userInfo, reqBody.GetPlaylistId())
+		if err != nil {
+			return core.NewGrpcHandlerResponse_InternalServerError[*myncer_pb.GetPlaylistDetailsResponse](
+				core.WrappedError(err, "failed to get Tidal playlist"),
+			)
+		}
 	default:
 		return core.NewGrpcHandlerResponse_InternalServerError[*myncer_pb.GetPlaylistDetailsResponse](
 			core.NewError("unsupported datasource: %s", reqBody.GetDatasource()),

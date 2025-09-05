@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import type { PlaylistMergeSync } from "@/generated_grpc/myncer/sync_pb"
+import { Datasource } from "@/generated_grpc/myncer/datasource_pb"
 
 interface PlaylistMergeSyncRenderProps {
   sync: PlaylistMergeSync
@@ -8,10 +9,12 @@ interface PlaylistMergeSyncRenderProps {
 export const PlaylistMergeSyncRender = ({ sync }: PlaylistMergeSyncRenderProps) => {
   const getDatasourceName = (datasource: number) => {
     switch (datasource) {
-      case 1:
+      case Datasource.SPOTIFY:
         return "Spotify"
-      case 2:
+      case Datasource.YOUTUBE:
         return "YouTube"
+      case Datasource.TIDAL:
+        return "Tidal"
       default:
         return "Unknown"
     }
@@ -19,10 +22,12 @@ export const PlaylistMergeSyncRender = ({ sync }: PlaylistMergeSyncRenderProps) 
 
   const getDatasourceColor = (datasource: number) => {
     switch (datasource) {
-      case 1:
+      case Datasource.SPOTIFY:
         return "bg-green-500"
-      case 2:
+      case Datasource.YOUTUBE:
         return "bg-red-500"
+      case Datasource.TIDAL:
+        return "bg-white-500"
       default:
         return "bg-gray-500"
     }

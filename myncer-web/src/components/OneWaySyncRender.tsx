@@ -1,5 +1,6 @@
 import { usePlaylist } from "@/hooks/usePlaylist"
-import { YoutubeIcon, Music, ArrowRight } from "lucide-react"
+import { Music, ArrowRight } from "lucide-react"
+import { SiSpotify, SiTidal, SiYoutube } from "react-icons/si"
 import { cn, getDatasourceLabel } from "@/lib/utils"
 import type { OneWaySync } from "@/generated_grpc/myncer/sync_pb"
 import { Datasource } from "@/generated_grpc/myncer/datasource_pb"
@@ -18,9 +19,11 @@ export const OneWaySyncRender = ({ sync }: { sync: OneWaySync }) => {
   const getDatasourceIcon = (datasource: Datasource) => {
     switch (datasource) {
       case Datasource.SPOTIFY:
-        return Music
+        return SiSpotify
       case Datasource.YOUTUBE:
-        return YoutubeIcon
+        return SiYoutube
+      case Datasource.TIDAL:
+        return SiTidal
       default:
         return Music
     }
@@ -32,6 +35,8 @@ export const OneWaySyncRender = ({ sync }: { sync: OneWaySync }) => {
         return "text-green-500"
       case Datasource.YOUTUBE:
         return "text-red-500"
+      case Datasource.TIDAL:
+        return "text-white-500"
       default:
         return "text-gray-500"
     }
@@ -83,4 +88,3 @@ export const OneWaySyncRender = ({ sync }: { sync: OneWaySync }) => {
     </div>
   )
 }
-

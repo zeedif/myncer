@@ -47,6 +47,8 @@ func (s *songImpl) GetIdByDatasource(
 		return s.getSpotifyId(ctx, userInfo)
 	case myncer_pb.Datasource_DATASOURCE_YOUTUBE:
 		return s.getYoutubeId(ctx, userInfo)
+	case myncer_pb.Datasource_DATASOURCE_TIDAL:
+		return s.getTidalId(ctx, userInfo)
 	default:
 		return "", core.NewError("Unknown datasource: %v", datasource)
 	}
@@ -94,6 +96,27 @@ func (s *songImpl) getYoutubeId(
 	)
 	if err != nil {
 		return "", core.WrappedError(err, "youtube search failed for song: %s", s.GetName())
+	}
+	return result.GetId(), nil
+}
+
+func (s *songImpl) getTidalId(
+	ctx context.Context,
+	userInfo *myncer_pb.User, /*const*/
+) (string, error) {
+	if s.spec.GetDatasource() == myncer_pb.Datasource_DATASOURCE_TIDAL {
+		return s.spec.GetDatasourceSongId(), nil
+	}
+	// Otherwise, try searching Tidal.
+	result, err := core.ToMyncerCtx(ctx).DatasourceClients.TidalClient.Search(
+		ctx,
+		userInfo,
+		core.NewSet(s.GetName()),
+		core.NewSet(s.GetArtistNames()...),
+		core.NewSet(s.GetAlbum()),
+	)
+	if err != nil {
+		return "", core.WrappedError(err, "tidal search failed for song: %s", s.GetName())
 	}
 	return result.GetId(), nil
 }
