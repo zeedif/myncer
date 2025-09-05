@@ -1,3 +1,4 @@
+
 package services
 
 import (
@@ -28,10 +29,7 @@ type SyncService struct {
 	listSyncsHandler    core.GrpcHandler[*myncer_pb.ListSyncsRequest, *myncer_pb.ListSyncsResponse]
 	getSyncHandler      core.GrpcHandler[*myncer_pb.GetSyncRequest, *myncer_pb.GetSyncResponse]
 	runSyncHandler      core.GrpcHandler[*myncer_pb.RunSyncRequest, *myncer_pb.RunSyncResponse]
-	listSyncRunsHandler core.GrpcHandler[
-		*myncer_pb.ListSyncRunsRequest,
-		*myncer_pb.ListSyncRunsResponse,
-	]
+	listSyncRunsHandler core.GrpcHandler[*myncer_pb.ListSyncRunsRequest, *myncer_pb.ListSyncRunsResponse]
 }
 
 var _ myncer_pb_connect.SyncServiceHandler = (*SyncService)(nil)
@@ -73,7 +71,15 @@ func (d *SyncService) RunSync(
 
 func (d *SyncService) ListSyncRuns(
 	ctx context.Context,
-	req *connect.Request[myncer_pb.ListSyncRunsRequest], /*const*/
+	req *connect.Request[myncer_pb.ListSyncRunsRequest],
 ) (*connect.Response[myncer_pb.ListSyncRunsResponse], error) {
 	return OrchestrateHandler(ctx, d.listSyncRunsHandler, req.Msg)
+}
+
+func (d *SyncService) SubscribeToSyncStatus(
+	ctx context.Context,
+	req *connect.Request[myncer_pb.SubscribeToSyncStatusRequest],
+	stream *connect.ServerStream[myncer_pb.SyncRun],
+) error {
+	return rpc_handlers.SubscribeToSyncStatus(ctx, req, stream)
 }

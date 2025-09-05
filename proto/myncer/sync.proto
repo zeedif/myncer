@@ -14,6 +14,9 @@ service SyncService {
   rpc GetSync(GetSyncRequest) returns (GetSyncResponse);
   rpc RunSync(RunSyncRequest) returns (RunSyncResponse);
   rpc ListSyncRuns(ListSyncRunsRequest) returns (ListSyncRunsResponse);
+  
+  // Streaming RPC for real-time sync status updates
+  rpc SubscribeToSyncStatus(SubscribeToSyncStatusRequest) returns (stream SyncRun);
 }
 
 // Representative of multiple sources -> one destination.
@@ -134,4 +137,9 @@ message ListSyncRunsRequest {}
 message ListSyncRunsResponse {
   // List of sync runs for the current user.
   repeated SyncRun sync_runs = 1;
+}
+
+message SubscribeToSyncStatusRequest {
+  // The ID of the sync to subscribe to for status updates.
+  string sync_id = 1;
 }

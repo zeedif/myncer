@@ -95,7 +95,7 @@ func (s *syncRunStoreImpl) GetSyncs(
 	if runIds != nil && !runIds.IsEmpty() {
 		conditions = append(
 			conditions,
-			fmt.Sprintf("run_id IN (%s)", makePlaceholders(len(args)+1, runIds.ToArray())),
+			fmt.Sprintf("run_id IN (%s)", makePlaceholders(len(args), runIds.ToArray())),
 		)
 		for _, runId := range runIds.ToArray() {
 			args = append(args, runId)
@@ -104,7 +104,7 @@ func (s *syncRunStoreImpl) GetSyncs(
 	if syncIds != nil && !syncIds.IsEmpty() {
 		conditions = append(
 			conditions,
-			fmt.Sprintf("sync_id IN (%s)", makePlaceholders(len(args)+1, syncIds.ToArray())),
+			fmt.Sprintf("sync_id IN (%s)", makePlaceholders(len(args), syncIds.ToArray())),
 		)
 		for _, syncId := range syncIds.ToArray() {
 			args = append(args, syncId)

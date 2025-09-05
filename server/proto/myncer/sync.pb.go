@@ -987,6 +987,51 @@ func (x *ListSyncRunsResponse) GetSyncRuns() []*SyncRun {
 	return nil
 }
 
+type SubscribeToSyncStatusRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The ID of the sync to subscribe to for status updates.
+	SyncId        string `protobuf:"bytes,1,opt,name=sync_id,json=syncId,proto3" json:"sync_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscribeToSyncStatusRequest) Reset() {
+	*x = SubscribeToSyncStatusRequest{}
+	mi := &file_myncer_sync_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscribeToSyncStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeToSyncStatusRequest) ProtoMessage() {}
+
+func (x *SubscribeToSyncStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_myncer_sync_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeToSyncStatusRequest.ProtoReflect.Descriptor instead.
+func (*SubscribeToSyncStatusRequest) Descriptor() ([]byte, []int) {
+	return file_myncer_sync_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *SubscribeToSyncStatusRequest) GetSyncId() string {
+	if x != nil {
+		return x.SyncId
+	}
+	return ""
+}
+
 var File_myncer_sync_proto protoreflect.FileDescriptor
 
 const file_myncer_sync_proto_rawDesc = "" +
@@ -1047,7 +1092,9 @@ const file_myncer_sync_proto_rawDesc = "" +
 	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage\"\x15\n" +
 	"\x13ListSyncRunsRequest\"D\n" +
 	"\x14ListSyncRunsResponse\x12,\n" +
-	"\tsync_runs\x18\x01 \x03(\v2\x0f.myncer.SyncRunR\bsyncRuns*\xa9\x01\n" +
+	"\tsync_runs\x18\x01 \x03(\v2\x0f.myncer.SyncRunR\bsyncRuns\"7\n" +
+	"\x1cSubscribeToSyncStatusRequest\x12\x17\n" +
+	"\async_id\x18\x01 \x01(\tR\x06syncId*\xa9\x01\n" +
 	"\n" +
 	"SyncStatus\x12\x1b\n" +
 	"\x17SYNC_STATUS_UNSPECIFIED\x10\x00\x12\x17\n" +
@@ -1055,7 +1102,7 @@ const file_myncer_sync_proto_rawDesc = "" +
 	"\x13SYNC_STATUS_RUNNING\x10\x02\x12\x19\n" +
 	"\x15SYNC_STATUS_COMPLETED\x10\x03\x12\x16\n" +
 	"\x12SYNC_STATUS_FAILED\x10\x04\x12\x19\n" +
-	"\x15SYNC_STATUS_CANCELLED\x10\x052\x9c\x03\n" +
+	"\x15SYNC_STATUS_CANCELLED\x10\x052\xee\x03\n" +
 	"\vSyncService\x12C\n" +
 	"\n" +
 	"CreateSync\x12\x19.myncer.CreateSyncRequest\x1a\x1a.myncer.CreateSyncResponse\x12C\n" +
@@ -1064,7 +1111,8 @@ const file_myncer_sync_proto_rawDesc = "" +
 	"\tListSyncs\x12\x18.myncer.ListSyncsRequest\x1a\x19.myncer.ListSyncsResponse\x12:\n" +
 	"\aGetSync\x12\x16.myncer.GetSyncRequest\x1a\x17.myncer.GetSyncResponse\x12:\n" +
 	"\aRunSync\x12\x16.myncer.RunSyncRequest\x1a\x17.myncer.RunSyncResponse\x12I\n" +
-	"\fListSyncRuns\x12\x1b.myncer.ListSyncRunsRequest\x1a\x1c.myncer.ListSyncRunsResponseB3Z1github.com/hansbala/myncer/proto/myncer;myncer_pbb\x06proto3"
+	"\fListSyncRuns\x12\x1b.myncer.ListSyncRunsRequest\x1a\x1c.myncer.ListSyncRunsResponse\x12P\n" +
+	"\x15SubscribeToSyncStatus\x12$.myncer.SubscribeToSyncStatusRequest\x1a\x0f.myncer.SyncRun0\x01B3Z1github.com/hansbala/myncer/proto/myncer;myncer_pbb\x06proto3"
 
 var (
 	file_myncer_sync_proto_rawDescOnce sync.Once
@@ -1079,40 +1127,41 @@ func file_myncer_sync_proto_rawDescGZIP() []byte {
 }
 
 var file_myncer_sync_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_myncer_sync_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_myncer_sync_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_myncer_sync_proto_goTypes = []any{
-	(SyncStatus)(0),               // 0: myncer.SyncStatus
-	(*PlaylistMergeSync)(nil),     // 1: myncer.PlaylistMergeSync
-	(*Sync)(nil),                  // 2: myncer.Sync
-	(*SyncRun)(nil),               // 3: myncer.SyncRun
-	(*OneWaySync)(nil),            // 4: myncer.OneWaySync
-	(*CreateSyncRequest)(nil),     // 5: myncer.CreateSyncRequest
-	(*CreateSyncResponse)(nil),    // 6: myncer.CreateSyncResponse
-	(*DeleteSyncRequest)(nil),     // 7: myncer.DeleteSyncRequest
-	(*DeleteSyncResponse)(nil),    // 8: myncer.DeleteSyncResponse
-	(*ListSyncsRequest)(nil),      // 9: myncer.ListSyncsRequest
-	(*ListSyncsResponse)(nil),     // 10: myncer.ListSyncsResponse
-	(*GetSyncRequest)(nil),        // 11: myncer.GetSyncRequest
-	(*GetSyncResponse)(nil),       // 12: myncer.GetSyncResponse
-	(*RunSyncRequest)(nil),        // 13: myncer.RunSyncRequest
-	(*RunSyncResponse)(nil),       // 14: myncer.RunSyncResponse
-	(*ListSyncRunsRequest)(nil),   // 15: myncer.ListSyncRunsRequest
-	(*ListSyncRunsResponse)(nil),  // 16: myncer.ListSyncRunsResponse
-	(*MusicSource)(nil),           // 17: myncer.MusicSource
-	(*timestamppb.Timestamp)(nil), // 18: google.protobuf.Timestamp
+	(SyncStatus)(0),                      // 0: myncer.SyncStatus
+	(*PlaylistMergeSync)(nil),            // 1: myncer.PlaylistMergeSync
+	(*Sync)(nil),                         // 2: myncer.Sync
+	(*SyncRun)(nil),                      // 3: myncer.SyncRun
+	(*OneWaySync)(nil),                   // 4: myncer.OneWaySync
+	(*CreateSyncRequest)(nil),            // 5: myncer.CreateSyncRequest
+	(*CreateSyncResponse)(nil),           // 6: myncer.CreateSyncResponse
+	(*DeleteSyncRequest)(nil),            // 7: myncer.DeleteSyncRequest
+	(*DeleteSyncResponse)(nil),           // 8: myncer.DeleteSyncResponse
+	(*ListSyncsRequest)(nil),             // 9: myncer.ListSyncsRequest
+	(*ListSyncsResponse)(nil),            // 10: myncer.ListSyncsResponse
+	(*GetSyncRequest)(nil),               // 11: myncer.GetSyncRequest
+	(*GetSyncResponse)(nil),              // 12: myncer.GetSyncResponse
+	(*RunSyncRequest)(nil),               // 13: myncer.RunSyncRequest
+	(*RunSyncResponse)(nil),              // 14: myncer.RunSyncResponse
+	(*ListSyncRunsRequest)(nil),          // 15: myncer.ListSyncRunsRequest
+	(*ListSyncRunsResponse)(nil),         // 16: myncer.ListSyncRunsResponse
+	(*SubscribeToSyncStatusRequest)(nil), // 17: myncer.SubscribeToSyncStatusRequest
+	(*MusicSource)(nil),                  // 18: myncer.MusicSource
+	(*timestamppb.Timestamp)(nil),        // 19: google.protobuf.Timestamp
 }
 var file_myncer_sync_proto_depIdxs = []int32{
-	17, // 0: myncer.PlaylistMergeSync.sources:type_name -> myncer.MusicSource
-	17, // 1: myncer.PlaylistMergeSync.destination:type_name -> myncer.MusicSource
-	18, // 2: myncer.Sync.created_at:type_name -> google.protobuf.Timestamp
-	18, // 3: myncer.Sync.updated_at:type_name -> google.protobuf.Timestamp
+	18, // 0: myncer.PlaylistMergeSync.sources:type_name -> myncer.MusicSource
+	18, // 1: myncer.PlaylistMergeSync.destination:type_name -> myncer.MusicSource
+	19, // 2: myncer.Sync.created_at:type_name -> google.protobuf.Timestamp
+	19, // 3: myncer.Sync.updated_at:type_name -> google.protobuf.Timestamp
 	4,  // 4: myncer.Sync.one_way_sync:type_name -> myncer.OneWaySync
 	1,  // 5: myncer.Sync.playlist_merge_sync:type_name -> myncer.PlaylistMergeSync
 	0,  // 6: myncer.SyncRun.sync_status:type_name -> myncer.SyncStatus
-	18, // 7: myncer.SyncRun.created_at:type_name -> google.protobuf.Timestamp
-	18, // 8: myncer.SyncRun.updated_at:type_name -> google.protobuf.Timestamp
-	17, // 9: myncer.OneWaySync.source:type_name -> myncer.MusicSource
-	17, // 10: myncer.OneWaySync.destination:type_name -> myncer.MusicSource
+	19, // 7: myncer.SyncRun.created_at:type_name -> google.protobuf.Timestamp
+	19, // 8: myncer.SyncRun.updated_at:type_name -> google.protobuf.Timestamp
+	18, // 9: myncer.OneWaySync.source:type_name -> myncer.MusicSource
+	18, // 10: myncer.OneWaySync.destination:type_name -> myncer.MusicSource
 	4,  // 11: myncer.CreateSyncRequest.one_way_sync:type_name -> myncer.OneWaySync
 	1,  // 12: myncer.CreateSyncRequest.playlist_merge_sync:type_name -> myncer.PlaylistMergeSync
 	2,  // 13: myncer.CreateSyncResponse.sync:type_name -> myncer.Sync
@@ -1126,14 +1175,16 @@ var file_myncer_sync_proto_depIdxs = []int32{
 	11, // 21: myncer.SyncService.GetSync:input_type -> myncer.GetSyncRequest
 	13, // 22: myncer.SyncService.RunSync:input_type -> myncer.RunSyncRequest
 	15, // 23: myncer.SyncService.ListSyncRuns:input_type -> myncer.ListSyncRunsRequest
-	6,  // 24: myncer.SyncService.CreateSync:output_type -> myncer.CreateSyncResponse
-	8,  // 25: myncer.SyncService.DeleteSync:output_type -> myncer.DeleteSyncResponse
-	10, // 26: myncer.SyncService.ListSyncs:output_type -> myncer.ListSyncsResponse
-	12, // 27: myncer.SyncService.GetSync:output_type -> myncer.GetSyncResponse
-	14, // 28: myncer.SyncService.RunSync:output_type -> myncer.RunSyncResponse
-	16, // 29: myncer.SyncService.ListSyncRuns:output_type -> myncer.ListSyncRunsResponse
-	24, // [24:30] is the sub-list for method output_type
-	18, // [18:24] is the sub-list for method input_type
+	17, // 24: myncer.SyncService.SubscribeToSyncStatus:input_type -> myncer.SubscribeToSyncStatusRequest
+	6,  // 25: myncer.SyncService.CreateSync:output_type -> myncer.CreateSyncResponse
+	8,  // 26: myncer.SyncService.DeleteSync:output_type -> myncer.DeleteSyncResponse
+	10, // 27: myncer.SyncService.ListSyncs:output_type -> myncer.ListSyncsResponse
+	12, // 28: myncer.SyncService.GetSync:output_type -> myncer.GetSyncResponse
+	14, // 29: myncer.SyncService.RunSync:output_type -> myncer.RunSyncResponse
+	16, // 30: myncer.SyncService.ListSyncRuns:output_type -> myncer.ListSyncRunsResponse
+	3,  // 31: myncer.SyncService.SubscribeToSyncStatus:output_type -> myncer.SyncRun
+	25, // [25:32] is the sub-list for method output_type
+	18, // [18:25] is the sub-list for method input_type
 	18, // [18:18] is the sub-list for extension type_name
 	18, // [18:18] is the sub-list for extension extendee
 	0,  // [0:18] is the sub-list for field type_name
@@ -1159,7 +1210,7 @@ func file_myncer_sync_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_myncer_sync_proto_rawDesc), len(file_myncer_sync_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   16,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

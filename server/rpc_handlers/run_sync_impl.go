@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/hansbala/myncer/auth"
 	"github.com/hansbala/myncer/core"
 	myncer_pb "github.com/hansbala/myncer/proto/myncer"
 )
@@ -40,16 +41,27 @@ func (rs *runSyncImpl) ProcessRequest(
 	userInfo *myncer_pb.User, /*const,@nullable*/
 	reqBody *myncer_pb.RunSyncRequest, /*const*/
 ) *core.GrpcHandlerResponse[*myncer_pb.RunSyncResponse] {
-	sync, err := core.ToMyncerCtx(ctx).DB.SyncStore.GetSync(ctx, reqBody.GetSyncId())
+	myncerCtx := core.ToMyncerCtx(ctx) // Extraer el MyncerCtx del contexto original
+	sync, err := myncerCtx.DB.SyncStore.GetSync(ctx, reqBody.GetSyncId())
 	if err != nil {
 		return core.NewGrpcHandlerResponse_InternalServerError[*myncer_pb.RunSyncResponse](
 			core.WrappedError(err, "could not get sync by id"),
 		)
 	}
-	// We want to be able to run syncs in the background.
-	ctx = context.WithoutCancel(ctx)
+
+	// Iniciar la sincronización en una goroutine con un nuevo contexto.
 	go func() {
-		if err := rs.syncEngine.RunSync(ctx, userInfo, sync); err != nil {
+		// 1. Crear un nuevo contexto de fondo que no será cancelado cuando la petición HTTP termine.
+		bgCtx := context.Background()
+
+		// 2. Transferir los valores importantes del contexto original al nuevo.
+		bgCtx = core.WithMyncerCtx(bgCtx, myncerCtx)
+		if userInfo != nil {
+			bgCtx = auth.ContextWithUser(bgCtx, userInfo)
+		}
+
+		// 3. Ejecutar la sincronización con el nuevo contexto.
+		if err := rs.syncEngine.RunSync(bgCtx, userInfo, sync); err != nil {
 			core.Errorf(core.WrappedError(err, "failed to run sync job"))
 		}
 	}()

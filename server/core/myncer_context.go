@@ -9,10 +9,11 @@ import (
 type myncerCtxType struct{}
 
 type MyncerCtx struct {
-	DB                *Database          /*const*/
-	DatasourceClients *DatasourceClients /*const*/
-	Config            *myncer_pb.Config  /*const*/
-	LlmClient         LlmClient          /*@nullable*/       // nil if LLM is disabled
+	DB                    *Database              /*const*/
+	DatasourceClients     *DatasourceClients     /*const*/
+	Config                *myncer_pb.Config      /*const*/
+	LlmClient             LlmClient              /*@nullable*/       // nil if LLM is disabled
+	SyncStatusBroadcaster *SyncStatusBroadcaster /*const*/
 }
 
 type DatasourceClients struct {
@@ -40,7 +41,8 @@ func MustGetMyncerCtx(
 			YoutubeClient: datasourceClients.YoutubeClient,
 			TidalClient:   datasourceClients.TidalClient,
 		},
-		LlmClient: MustGetLlmClient(ctx, llmClients, config),
+		LlmClient:             MustGetLlmClient(ctx, llmClients, config),
+		SyncStatusBroadcaster: NewSyncStatusBroadcaster(),
 	}
 }
 

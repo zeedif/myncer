@@ -46,6 +46,9 @@ const (
 	// SyncServiceListSyncRunsProcedure is the fully-qualified name of the SyncService's ListSyncRuns
 	// RPC.
 	SyncServiceListSyncRunsProcedure = "/myncer.SyncService/ListSyncRuns"
+	// SyncServiceSubscribeToSyncStatusProcedure is the fully-qualified name of the SyncService's
+	// SubscribeToSyncStatus RPC.
+	SyncServiceSubscribeToSyncStatusProcedure = "/myncer.SyncService/SubscribeToSyncStatus"
 )
 
 // SyncServiceClient is a client for the myncer.SyncService service.
@@ -56,6 +59,8 @@ type SyncServiceClient interface {
 	GetSync(context.Context, *connect.Request[myncer.GetSyncRequest]) (*connect.Response[myncer.GetSyncResponse], error)
 	RunSync(context.Context, *connect.Request[myncer.RunSyncRequest]) (*connect.Response[myncer.RunSyncResponse], error)
 	ListSyncRuns(context.Context, *connect.Request[myncer.ListSyncRunsRequest]) (*connect.Response[myncer.ListSyncRunsResponse], error)
+	// Streaming RPC for real-time sync status updates
+	SubscribeToSyncStatus(context.Context, *connect.Request[myncer.SubscribeToSyncStatusRequest]) (*connect.ServerStreamForClient[myncer.SyncRun], error)
 }
 
 // NewSyncServiceClient constructs a client for the myncer.SyncService service. By default, it uses
@@ -105,17 +110,24 @@ func NewSyncServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(syncServiceMethods.ByName("ListSyncRuns")),
 			connect.WithClientOptions(opts...),
 		),
+		subscribeToSyncStatus: connect.NewClient[myncer.SubscribeToSyncStatusRequest, myncer.SyncRun](
+			httpClient,
+			baseURL+SyncServiceSubscribeToSyncStatusProcedure,
+			connect.WithSchema(syncServiceMethods.ByName("SubscribeToSyncStatus")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // syncServiceClient implements SyncServiceClient.
 type syncServiceClient struct {
-	createSync   *connect.Client[myncer.CreateSyncRequest, myncer.CreateSyncResponse]
-	deleteSync   *connect.Client[myncer.DeleteSyncRequest, myncer.DeleteSyncResponse]
-	listSyncs    *connect.Client[myncer.ListSyncsRequest, myncer.ListSyncsResponse]
-	getSync      *connect.Client[myncer.GetSyncRequest, myncer.GetSyncResponse]
-	runSync      *connect.Client[myncer.RunSyncRequest, myncer.RunSyncResponse]
-	listSyncRuns *connect.Client[myncer.ListSyncRunsRequest, myncer.ListSyncRunsResponse]
+	createSync            *connect.Client[myncer.CreateSyncRequest, myncer.CreateSyncResponse]
+	deleteSync            *connect.Client[myncer.DeleteSyncRequest, myncer.DeleteSyncResponse]
+	listSyncs             *connect.Client[myncer.ListSyncsRequest, myncer.ListSyncsResponse]
+	getSync               *connect.Client[myncer.GetSyncRequest, myncer.GetSyncResponse]
+	runSync               *connect.Client[myncer.RunSyncRequest, myncer.RunSyncResponse]
+	listSyncRuns          *connect.Client[myncer.ListSyncRunsRequest, myncer.ListSyncRunsResponse]
+	subscribeToSyncStatus *connect.Client[myncer.SubscribeToSyncStatusRequest, myncer.SyncRun]
 }
 
 // CreateSync calls myncer.SyncService.CreateSync.
@@ -148,6 +160,11 @@ func (c *syncServiceClient) ListSyncRuns(ctx context.Context, req *connect.Reque
 	return c.listSyncRuns.CallUnary(ctx, req)
 }
 
+// SubscribeToSyncStatus calls myncer.SyncService.SubscribeToSyncStatus.
+func (c *syncServiceClient) SubscribeToSyncStatus(ctx context.Context, req *connect.Request[myncer.SubscribeToSyncStatusRequest]) (*connect.ServerStreamForClient[myncer.SyncRun], error) {
+	return c.subscribeToSyncStatus.CallServerStream(ctx, req)
+}
+
 // SyncServiceHandler is an implementation of the myncer.SyncService service.
 type SyncServiceHandler interface {
 	CreateSync(context.Context, *connect.Request[myncer.CreateSyncRequest]) (*connect.Response[myncer.CreateSyncResponse], error)
@@ -156,6 +173,8 @@ type SyncServiceHandler interface {
 	GetSync(context.Context, *connect.Request[myncer.GetSyncRequest]) (*connect.Response[myncer.GetSyncResponse], error)
 	RunSync(context.Context, *connect.Request[myncer.RunSyncRequest]) (*connect.Response[myncer.RunSyncResponse], error)
 	ListSyncRuns(context.Context, *connect.Request[myncer.ListSyncRunsRequest]) (*connect.Response[myncer.ListSyncRunsResponse], error)
+	// Streaming RPC for real-time sync status updates
+	SubscribeToSyncStatus(context.Context, *connect.Request[myncer.SubscribeToSyncStatusRequest], *connect.ServerStream[myncer.SyncRun]) error
 }
 
 // NewSyncServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -201,6 +220,12 @@ func NewSyncServiceHandler(svc SyncServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(syncServiceMethods.ByName("ListSyncRuns")),
 		connect.WithHandlerOptions(opts...),
 	)
+	syncServiceSubscribeToSyncStatusHandler := connect.NewServerStreamHandler(
+		SyncServiceSubscribeToSyncStatusProcedure,
+		svc.SubscribeToSyncStatus,
+		connect.WithSchema(syncServiceMethods.ByName("SubscribeToSyncStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/myncer.SyncService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SyncServiceCreateSyncProcedure:
@@ -215,6 +240,8 @@ func NewSyncServiceHandler(svc SyncServiceHandler, opts ...connect.HandlerOption
 			syncServiceRunSyncHandler.ServeHTTP(w, r)
 		case SyncServiceListSyncRunsProcedure:
 			syncServiceListSyncRunsHandler.ServeHTTP(w, r)
+		case SyncServiceSubscribeToSyncStatusProcedure:
+			syncServiceSubscribeToSyncStatusHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -246,4 +273,8 @@ func (UnimplementedSyncServiceHandler) RunSync(context.Context, *connect.Request
 
 func (UnimplementedSyncServiceHandler) ListSyncRuns(context.Context, *connect.Request[myncer.ListSyncRunsRequest]) (*connect.Response[myncer.ListSyncRunsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("myncer.SyncService.ListSyncRuns is not implemented"))
+}
+
+func (UnimplementedSyncServiceHandler) SubscribeToSyncStatus(context.Context, *connect.Request[myncer.SubscribeToSyncStatusRequest], *connect.ServerStream[myncer.SyncRun]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("myncer.SyncService.SubscribeToSyncStatus is not implemented"))
 }

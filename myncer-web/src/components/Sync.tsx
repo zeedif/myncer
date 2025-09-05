@@ -4,9 +4,11 @@ import { OneWaySyncRender } from "./OneWaySyncRender"
 import { PlaylistMergeSyncRender } from "./PlaylistMergeSyncRender"
 import { useDeleteSync } from "@/hooks/useDeleteSync"
 import { useRunSync } from "@/hooks/useRunSync"
+import { useSyncStatusStream } from "@/hooks/useSyncStatusStream"
 import { SyncStatus, type Sync } from "@/generated_grpc/myncer/sync_pb"
 import { protoTimestampToDate } from "@/lib/utils"
 import { useListSyncRuns } from "@/hooks/useListSyncRuns"
+import { useCallback } from "react"
 
 export const SyncRender = ({ sync }: { sync: Sync }) => {
   const { runSync, isRunningSync } = useRunSync()
@@ -14,7 +16,20 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
   const { syncRuns } = useListSyncRuns()
   const { syncVariant, id, createdAt } = sync
 
-  // 1. Find the most recent run for this Sync
+  const onMessage = useCallback((syncRun: any) => {
+      console.log(`Received real-time update for sync ${id}:`, syncRun)
+  }, [id]);
+
+  const onError = useCallback((error: Error) => {
+      console.error(`Streaming error for sync ${id}:`, error)
+  }, [id]);
+
+  const streamingStatus = useSyncStatusStream(sync.id, {
+    onMessage,
+    onError,
+  })
+
+  // Fallback: Find the most recent run for this Sync using the existing polling method
   const mostRecentRun = syncRuns
     .filter((run) => run.syncId === sync.id)
     .sort((a, b) => {
@@ -24,10 +39,13 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
       return dateB - dateA
     })[0] // Take the first element, which is the most recent
 
-  // 2. Determine the visual status
+  // Use streaming status if available, otherwise fall back to polling
+  const currentRun = streamingStatus.latestRun || mostRecentRun
+  
+  // Determine the visual status
   let status: 'RUNNING' | 'PENDING' | 'FAILED' | 'COMPLETED' | 'IDLE' = 'IDLE'
-  if (mostRecentRun) {
-    switch (mostRecentRun.syncStatus) {
+  if (currentRun) {
+    switch (currentRun.syncStatus) {
       case SyncStatus.RUNNING:
         status = 'RUNNING'
         break
@@ -58,11 +76,11 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
   }
 
   const renderStatusFooter = () => {
-    if (!mostRecentRun) {
+    if (!currentRun) {
       return <div>Created at {createdAt ? protoTimestampToDate(createdAt).toLocaleString() : "Unknown"}</div>
     }
 
-    const runDate = protoTimestampToDate(mostRecentRun.updatedAt!).toLocaleString()
+    const runDate = protoTimestampToDate(currentRun.updatedAt!).toLocaleString()
 
     switch (status) {
       case 'COMPLETED':
@@ -70,6 +88,9 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
           <div className="flex items-center gap-2 text-green-600">
             <CircleCheck className="w-4 h-4" />
             <span>Last synced successfully at {runDate}</span>
+            {streamingStatus.isConnected && (
+              <span className="text-xs text-blue-500">(Live)</span>
+            )}
           </div>
         )
       case 'FAILED':
@@ -77,6 +98,9 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
           <div className="flex items-center gap-2 text-red-600">
             <AlertCircle className="w-4 h-4" />
             <span>Failed at {runDate}</span>
+            {streamingStatus.isConnected && (
+              <span className="text-xs text-blue-500">(Live)</span>
+            )}
           </div>
         )
       case 'RUNNING':
@@ -84,6 +108,9 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
           <div className="flex items-center gap-2 text-blue-600 animate-pulse">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>Syncing now...</span>
+            {streamingStatus.isConnected && (
+              <span className="text-xs text-blue-500">(Live)</span>
+            )}
           </div>
         )
       case 'PENDING':
@@ -91,6 +118,9 @@ export const SyncRender = ({ sync }: { sync: Sync }) => {
           <div className="flex items-center gap-2 text-yellow-600">
             <Loader2 className="w-4 h-4" />
             <span>Pending execution...</span>
+            {streamingStatus.isConnected && (
+              <span className="text-xs text-blue-500">(Live)</span>
+            )}
           </div>
         )
       default:

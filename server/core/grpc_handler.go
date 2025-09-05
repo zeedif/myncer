@@ -20,6 +20,21 @@ type GrpcHandler[Req any, Resp any] interface {
 	) *GrpcHandlerResponse[Resp]
 }
 
+// GrpcStreamHandler is an interface for handlers that support server-streaming RPCs
+type GrpcStreamHandler[Req any, Resp any] interface {
+	CheckPerms(
+		ctx context.Context,
+		userInfo *myncer_pb.User, /*const,@nullable*/
+		reqBody Req, /*const*/
+	) error
+	ProcessRequest(
+		ctx context.Context,
+		userInfo *myncer_pb.User, /*const,@nullable*/
+		reqBody Req, /*const*/
+		streamChan chan<- *Resp, // Canal para enviar respuestas al stream
+	) error
+}
+
 type GrpcHandlerResponse[T any] struct {
 	// Error used for internal logging on server.
 	Err error /*@nullable*/

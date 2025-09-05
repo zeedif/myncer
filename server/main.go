@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"time" // Importar time
 
 	connect_cors "connectrpc.com/cors"
 	"github.com/hansbala/myncer/auth"
@@ -51,8 +52,16 @@ func main() {
 	path, grpcHandler = myncer_pb_connect.NewSyncServiceHandler(syncService)
 	mux.Handle(path, GetWrappedGrpcHandler(grpcHandler, myncerCtx))
 
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 0,
+		IdleTimeout:  60 * time.Second,
+	}
+
 	core.Printf("gRPC server listening on port 8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		core.Errorf("failed: ", err)
 	}
 }

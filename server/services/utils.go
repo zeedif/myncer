@@ -43,3 +43,47 @@ func OrchestrateHandler[RequestT any, ResponseT any](
 	}
 	return connectResp, nil
 }
+
+// OrchestrateStreamHandler is similar to OrchestrateHandler but for server-streaming RPCs
+func OrchestrateStreamHandler[RequestT any, ResponseT any](
+	ctx context.Context,
+	handler core.GrpcStreamHandler[*RequestT, ResponseT],
+	reqBody *RequestT,
+	stream *connect.ServerStream[ResponseT],
+) error {
+	userInfo := auth.UserFromContext(ctx)
+	if err := handler.CheckPerms(ctx, userInfo, reqBody); err != nil {
+		core.Printf("failed to check user permissions: %v", err)
+		return connect.NewError(
+			connect.CodePermissionDenied,
+			core.WrappedError(err, "failed to check user permissions"),
+		)
+	}
+
+	// Create a channel to receive messages from the handler
+	streamChan := make(chan *ResponseT, 10)
+	
+	// Run the handler in a goroutine
+	go func() {
+		defer close(streamChan)
+		if err := handler.ProcessRequest(ctx, userInfo, reqBody, streamChan); err != nil {
+			core.Errorf("failed to process stream request: %v", err)
+		}
+	}()
+
+	// Send messages from the handler to the client
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case msg, ok := <-streamChan:
+			if !ok {
+				// Channel closed, stream is done
+				return nil
+			}
+			if err := stream.Send(msg); err != nil {
+				return connect.NewError(connect.CodeInternal, err)
+			}
+		}
+	}
+}
