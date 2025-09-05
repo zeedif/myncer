@@ -644,7 +644,16 @@ func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb
 // buildTidalQueries constructs a list of search queries from most to least specific.
 func buildTidalQueries(songToSearch core.Song) []string {
 	queries := []string{}
-	// Use uncleaned, raw metadata first to preserve special characters
+	seen := make(map[string]bool)
+
+	addQuery := func(q string) {
+		if q != "" && !seen[q] {
+			queries = append(queries, q)
+			seen[q] = true
+		}
+	}
+
+	// Raw metadata
 	rawTrack := songToSearch.GetName()
 	rawArtists := strings.Join(songToSearch.GetArtistNames(), " ")
 	rawAlbum := songToSearch.GetAlbum()
@@ -654,42 +663,31 @@ func buildTidalQueries(songToSearch core.Song) []string {
 	cleanArtists := matching.Clean(rawArtists)
 	cleanAlbum := matching.Clean(rawAlbum)
 
-	// --- Build query list ---
-	// 1. Raw, specific queries
+	// Phase 1: Raw, specific queries
 	if rawTrack != "" && rawArtists != "" && rawAlbum != "" {
-		queries = append(queries, fmt.Sprintf("%s %s %s", rawArtists, rawTrack, rawAlbum))
+		addQuery(fmt.Sprintf("%s %s %s", rawArtists, rawTrack, rawAlbum))
 	}
 	if rawTrack != "" && rawArtists != "" {
-		queries = append(queries, fmt.Sprintf("%s %s", rawArtists, rawTrack))
+		addQuery(fmt.Sprintf("%s %s", rawArtists, rawTrack))
 	}
 
-	// 2. Cleaned, specific queries
+	// Phase 2: Cleaned, specific queries
 	if cleanTrack != "" && cleanArtists != "" && cleanAlbum != "" {
-		queries = append(queries, fmt.Sprintf("%s %s %s", cleanArtists, cleanTrack, cleanAlbum))
+		addQuery(fmt.Sprintf("%s %s %s", cleanArtists, cleanTrack, cleanAlbum))
 	}
 	if cleanTrack != "" && cleanArtists != "" {
-		queries = append(queries, fmt.Sprintf("%s %s", cleanArtists, cleanTrack))
+		addQuery(fmt.Sprintf("%s %s", cleanArtists, cleanTrack))
 	}
 
-	// 3. More generic queries
+	// Phase 3: More generic queries
 	if cleanTrack != "" && cleanAlbum != "" {
-		queries = append(queries, fmt.Sprintf("%s %s", cleanTrack, cleanAlbum))
+		addQuery(fmt.Sprintf("%s %s", cleanTrack, cleanAlbum))
 	}
 	if cleanTrack != "" {
-		queries = append(queries, cleanTrack)
+		addQuery(cleanTrack)
 	}
 
-	// Deduplicate the list
-	seen := make(map[string]bool)
-	result := []string{}
-	for _, query := range queries {
-		if !seen[query] {
-			result = append(result, query)
-			seen[query] = true
-		}
-	}
-
-	return result
+	return queries
 }
 
 func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, names core.Set[string], artistNames core.Set[string], albumNames core.Set[string]) (core.Song, error) {
@@ -711,10 +709,10 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 
 	// 1. Try searching by ISRC first, as it's the most accurate
 	if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {
+		core.Printf("Tidal: Searching song '%s' for track by ISRC %s", songToSearch.GetName(), isrc)
 		isrcURL := fmt.Sprintf("%s/tracks?filter[isrc]=%s&countryCode=%s&include=albums,artists", cTidalAPIBaseURL, isrc, countryCode)
 		req, _ := http.NewRequestWithContext(ctx, "GET", isrcURL, nil)
 		req.Header.Set("Accept", cTidalAcceptHeader)
-		core.Printf("Tidal: Searching for track by ISRC %s", isrc)
 
 		resp, err := client.Do(req)
 		if err == nil && resp.StatusCode == http.StatusOK {
@@ -731,6 +729,8 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 		if resp != nil {
 			resp.Body.Close()
 		}
+	} else {
+		core.Printf("Tidal: No ISRC found for song '%s'. Proceeding with metadata search.", songToSearch.GetName())
 	}
 
 	// 2. Fallback to metadata search

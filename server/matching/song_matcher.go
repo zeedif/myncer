@@ -19,6 +19,38 @@ func normalizedLevenshtein(s1, s2 string) float64 {
 	return (1.0 - (float64(distance) / maxLen)) * 100.0
 }
 
+// tokenSetRatio calculates similarity based on the intersection and union of word sets.
+// It's ideal for comparing artist names where order doesn't matter.
+func tokenSetRatio(s1, s2 string) float64 {
+	words1 := core.ToSet(strings.Fields(s1))
+	words2 := core.ToSet(strings.Fields(s2))
+
+	if words1.IsEmpty() && words2.IsEmpty() {
+		return 100.0
+	}
+	if words1.IsEmpty() || words2.IsEmpty() {
+		return 0.0
+	}
+
+	intersection := core.NewSet[string]()
+	for word := range words1 {
+		if words2.Contains(word) {
+			intersection.Add(word)
+		}
+	}
+
+	union := core.NewSet[string]()
+	for word := range words1 {
+		union.Add(word)
+	}
+	for word := range words2 {
+		union.Add(word)
+	}
+
+	return (float64(len(intersection)) / float64(len(union))) * 100.0
+}
+
+
 // CalculateSimilarity calculates a weighted similarity score between two songs.
 // It prioritizes an exact ISRC match and falls back to a weighted fuzzy match
 // on cleaned metadata if no ISRC is available.
@@ -38,7 +70,7 @@ func CalculateSimilarity(songA, songB core.Song) float64 {
 
 	artistA := strings.Join(songA.GetArtistNames(), " ")
 	artistB := strings.Join(songB.GetArtistNames(), " ")
-	artistScore := normalizedLevenshtein(
+	artistScore := tokenSetRatio(
 		Clean(artistA),
 		Clean(artistB),
 	)
