@@ -212,37 +212,59 @@ func (s *spotifyClientImpl) ClearPlaylist(
 }
 
 // buildSpotifyQueries builds a list of search strings from most specific to most general.
+// It creates queries with both raw and cleaned metadata to improve matching accuracy.
 func buildSpotifyQueries(songToSearch core.Song) []string {
 	queries := []string{}
-	cleanTrack := matching.Clean(songToSearch.GetName())
+	seen := make(map[string]bool)
 
+	addQuery := func(q string) {
+		if q != "" && !seen[q] {
+			queries = append(queries, q)
+			seen[q] = true
+		}
+	}
+
+	// Raw metadata
+	rawTrack := songToSearch.GetName()
+	rawArtists := songToSearch.GetArtistNames()
+	rawAlbum := songToSearch.GetAlbum()
+	mainRawArtist := ""
+	if len(rawArtists) > 0 {
+		mainRawArtist = rawArtists[0]
+	}
+
+	// Cleaned metadata
+	cleanTrack := matching.Clean(rawTrack)
+	cleanAlbum := matching.Clean(rawAlbum)
 	var cleanArtists []string
-	for _, artist := range songToSearch.GetArtistNames() {
+	for _, artist := range rawArtists {
 		cleanArtists = append(cleanArtists, matching.Clean(artist))
 	}
-	// For Spotify, it's often better to use only the first artist in complex searches.
-	mainArtist := ""
+	mainCleanArtist := ""
 	if len(cleanArtists) > 0 {
-		mainArtist = cleanArtists[0]
+		mainCleanArtist = cleanArtists[0]
 	}
 
-	cleanAlbum := matching.Clean(songToSearch.GetAlbum())
+	// Phase 1: Raw, specific queries
+	if rawTrack != "" && mainRawArtist != "" && rawAlbum != "" {
+		addQuery(fmt.Sprintf("track:\"%s\" artist:\"%s\" album:\"%s\"", rawTrack, mainRawArtist, rawAlbum))
+	}
+	if rawTrack != "" && mainRawArtist != "" {
+		addQuery(fmt.Sprintf("track:\"%s\" artist:\"%s\"", rawTrack, mainRawArtist))
+	}
 
-	// Most specific: Title + Main Artist + Album
-	if cleanTrack != "" && mainArtist != "" && cleanAlbum != "" {
-		queries = append(queries, fmt.Sprintf("track:\"%s\" artist:\"%s\" album:\"%s\"", cleanTrack, mainArtist, cleanAlbum))
+	// Phase 2: Cleaned, specific queries
+	if cleanTrack != "" && mainCleanArtist != "" && cleanAlbum != "" {
+		addQuery(fmt.Sprintf("track:\"%s\" artist:\"%s\" album:\"%s\"", cleanTrack, mainCleanArtist, cleanAlbum))
 	}
-	// Title + Main Artist
-	if cleanTrack != "" && mainArtist != "" {
-		queries = append(queries, fmt.Sprintf("track:\"%s\" artist:\"%s\"", cleanTrack, mainArtist))
+	if cleanTrack != "" && mainCleanArtist != "" {
+		addQuery(fmt.Sprintf("track:\"%s\" artist:\"%s\"", cleanTrack, mainCleanArtist))
 	}
-	// Title + Album
 	if cleanTrack != "" && cleanAlbum != "" {
-		queries = append(queries, fmt.Sprintf("track:\"%s\" album:\"%s\"", cleanTrack, cleanAlbum))
+		addQuery(fmt.Sprintf("track:\"%s\" album:\"%s\"", cleanTrack, cleanAlbum))
 	}
-	// Only Title as last resort
 	if cleanTrack != "" {
-		queries = append(queries, fmt.Sprintf("track:\"%s\"", cleanTrack))
+		addQuery(fmt.Sprintf("track:\"%s\"", cleanTrack))
 	}
 
 	return queries

@@ -641,23 +641,55 @@ func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb
 	return nil
 }
 
+// buildTidalQueries constructs a list of search queries from most to least specific.
 func buildTidalQueries(songToSearch core.Song) []string {
 	queries := []string{}
-	cleanTrack := matching.Clean(songToSearch.GetName())
-	
-	var cleanArtists []string
-	for _, artist := range songToSearch.GetArtistNames() {
-		cleanArtists = append(cleanArtists, matching.Clean(artist))
-	}
-	cleanArtistStr := strings.Join(cleanArtists, " ")
+	// Use uncleaned, raw metadata first to preserve special characters
+	rawTrack := songToSearch.GetName()
+	rawArtists := strings.Join(songToSearch.GetArtistNames(), " ")
+	rawAlbum := songToSearch.GetAlbum()
 
-	if cleanTrack != "" && cleanArtistStr != "" {
-		queries = append(queries, fmt.Sprintf("%s %s", cleanArtistStr, cleanTrack))
+	// Cleaned metadata for fallback
+	cleanTrack := matching.Clean(rawTrack)
+	cleanArtists := matching.Clean(rawArtists)
+	cleanAlbum := matching.Clean(rawAlbum)
+
+	// --- Build query list ---
+	// 1. Raw, specific queries
+	if rawTrack != "" && rawArtists != "" && rawAlbum != "" {
+		queries = append(queries, fmt.Sprintf("%s %s %s", rawArtists, rawTrack, rawAlbum))
+	}
+	if rawTrack != "" && rawArtists != "" {
+		queries = append(queries, fmt.Sprintf("%s %s", rawArtists, rawTrack))
+	}
+
+	// 2. Cleaned, specific queries
+	if cleanTrack != "" && cleanArtists != "" && cleanAlbum != "" {
+		queries = append(queries, fmt.Sprintf("%s %s %s", cleanArtists, cleanTrack, cleanAlbum))
+	}
+	if cleanTrack != "" && cleanArtists != "" {
+		queries = append(queries, fmt.Sprintf("%s %s", cleanArtists, cleanTrack))
+	}
+
+	// 3. More generic queries
+	if cleanTrack != "" && cleanAlbum != "" {
+		queries = append(queries, fmt.Sprintf("%s %s", cleanTrack, cleanAlbum))
 	}
 	if cleanTrack != "" {
 		queries = append(queries, cleanTrack)
 	}
-	return queries
+
+	// Deduplicate the list
+	seen := make(map[string]bool)
+	result := []string{}
+	for _, query := range queries {
+		if !seen[query] {
+			result = append(result, query)
+			seen[query] = true
+		}
+	}
+
+	return result
 }
 
 func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, names core.Set[string], artistNames core.Set[string], albumNames core.Set[string]) (core.Song, error) {
