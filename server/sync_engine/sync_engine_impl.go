@@ -219,8 +219,8 @@ func (s *syncEngineImpl) getSearchedSongsWithUnmatched(
 				Name:             song.GetName(),
 				ArtistName:       song.GetArtistNames(),
 				AlbumName:        song.GetAlbum(),
-				Datasource:       song.GetDatasource(),
-				DatasourceSongId: song.GetDatasourceSongId(),
+				Datasource:       song.GetSpec().GetDatasource(),
+				DatasourceSongId: song.GetSpec().GetDatasourceSongId(),
 			})
 			continue
 		}
