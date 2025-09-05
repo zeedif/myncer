@@ -235,42 +235,39 @@ func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.
 	}
 
 	var allPlaylists []*myncer_pb.Playlist
-	locale := "en-US" // Required parameter for this endpoint
 
-	nextURL := fmt.Sprintf("%s/userCollections/%s/relationships/playlists?countryCode=%s&locale=%s&include=playlists&limit=%d",
+	nextURL := fmt.Sprintf("%s/playlists?filter[owners.id]=%s&countryCode=%s&limit=%d",
 		cTidalAPIBaseURL,
 		tidalUserID,
 		countryCode,
-		locale,
 		cTidalPageLimit)
 
 	for nextURL != "" {
 		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
 		if err != nil {
-			return nil, core.WrappedError(err, "failed to create request for Tidal user collection playlists")
+			return nil, core.WrappedError(err, "failed to create request for Tidal playlists")
 		}
 		req.Header.Set("Accept", cTidalAcceptHeader)
 
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, core.WrappedError(err, "failed to get Tidal user collection playlists from URL: %s", nextURL)
+			return nil, core.WrappedError(err, "failed to get Tidal playlists from URL: %s", nextURL)
 		}
 
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
-			return nil, core.NewError("Tidal API returned status %d for user collection playlists. Body: %s", resp.StatusCode, string(body))
+			return nil, core.NewError("Tidal API returned status %d for playlists. Body: %s", resp.StatusCode, string(body))
 		}
 
-		var playlistsResp UserCollectionPlaylistsResponse
+		var playlistsResp PlaylistsV2Response
 		if err := json.NewDecoder(resp.Body).Decode(&playlistsResp); err != nil {
 			resp.Body.Close()
-			return nil, core.WrappedError(err, "failed to decode Tidal user collection playlists response")
+			return nil, core.WrappedError(err, "failed to decode Tidal playlists response")
 		}
 		resp.Body.Close()
 
-		// Complete playlists come in the "included" field
-		for _, p := range playlistsResp.Included {
+		for _, p := range playlistsResp.Data {
 			if p.Type == "playlists" {
 				allPlaylists = append(allPlaylists, &myncer_pb.Playlist{
 					MusicSource: createMusicSource(myncer_pb.Datasource_DATASOURCE_TIDAL, p.ID),
