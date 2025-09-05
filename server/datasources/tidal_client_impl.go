@@ -19,10 +19,11 @@ import (
 )
 
 const (
-	cTidalAuthURL    = "https://auth.tidal.com/v1/oauth2/authorize"
-	cTidalTokenURL   = "https://auth.tidal.com/v1/oauth2/token"
-	cTidalAPIBaseURL = "https://openapi.tidal.com/v2"
-	cTidalPageLimit  = 50
+	cTidalAuthURL      = "https://auth.tidal.com/v1/oauth2/authorize"
+	cTidalTokenURL     = "https://auth.tidal.com/v1/oauth2/token"
+	cTidalAPIBaseURL   = "https://openapi.tidal.com/v2"
+	cTidalPageLimit    = 50
+	cTidalAcceptHeader = "application/vnd.api+json"
 )
 
 // TidalResourceIdentifier is a JSON:API resource identifier
@@ -136,16 +137,11 @@ type TracksV2Response struct {
 
 // Helper function to get the numeric user ID from Tidal
 func getTidalUserID(ctx context.Context, client *http.Client) (string, error) {
-	// Add a default countryCode as many Tidal endpoints require it.
-	// This might resolve the 404 if the API needs a regional context.
-	countryCode := "US"
-	url := fmt.Sprintf("%s/users/me?countryCode=%s", cTidalAPIBaseURL, countryCode)
-
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/users/me", cTidalAPIBaseURL), nil)
 	if err != nil {
 		return "", core.WrappedError(err, "failed to create request for Tidal user ID")
 	}
-	req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+	req.Header.Set("Accept", cTidalAcceptHeader)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -229,7 +225,7 @@ func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.
 		if err != nil {
 			return nil, core.WrappedError(err, "failed to create request for Tidal playlists")
 		}
-		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+		req.Header.Set("Accept", cTidalAcceptHeader)
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -280,7 +276,7 @@ func (c *tidalClientImpl) GetPlaylist(ctx context.Context, userInfo *myncer_pb.U
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to create request for Tidal playlist")
 	}
-	req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+	req.Header.Set("Accept", cTidalAcceptHeader)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -326,7 +322,7 @@ func (c *tidalClientImpl) GetPlaylistSongs(ctx context.Context, userInfo *myncer
 		if err != nil {
 			return nil, core.WrappedError(err, "failed to create request for Tidal playlist items")
 		}
-		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+		req.Header.Set("Accept", cTidalAcceptHeader)
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -393,7 +389,7 @@ func (c *tidalClientImpl) AddToPlaylist(ctx context.Context, userInfo *myncer_pb
 			return core.WrappedError(err, "failed to create add tracks request")
 		}
 		req.Header.Set("Content-Type", "application/vnd.api+json")
-		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+		req.Header.Set("Accept", cTidalAcceptHeader)
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -418,15 +414,14 @@ func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb
 
 	// Fetch all item identifiers with their unique itemId for deletion.
 	var itemsToRemove []PlaylistItemIdentifier
-	countryCode := "US"
-	nextURL := fmt.Sprintf("%s/playlists/%s/relationships/items?countryCode=%s&limit=%d", cTidalAPIBaseURL, playlistId, countryCode, cTidalPageLimit)
+	nextURL := fmt.Sprintf("%s/playlists/%s/relationships/items", cTidalAPIBaseURL, playlistId)
 
 	for nextURL != "" {
 		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
 		if err != nil {
 			return core.WrappedError(err, "failed to create request to get playlist items for deletion")
 		}
-		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+		req.Header.Set("Accept", cTidalAcceptHeader)
 		resp, err := client.Do(req)
 		if err != nil {
 			return core.WrappedError(err, "failed to get playlist items for deletion")
@@ -472,13 +467,13 @@ func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb
 			return core.WrappedError(err, "failed to marshal delete payload")
 		}
 
-		deleteURL := fmt.Sprintf("%s/playlists/%s/relationships/items?countryCode=%s", cTidalAPIBaseURL, playlistId, countryCode)
+		deleteURL := fmt.Sprintf("%s/playlists/%s/relationships/items", cTidalAPIBaseURL, playlistId)
 		req, err := http.NewRequestWithContext(ctx, "DELETE", deleteURL, bytes.NewBuffer(payloadBytes))
 		if err != nil {
 			return core.WrappedError(err, "failed to create delete request")
 		}
 		req.Header.Set("Content-Type", "application/vnd.api+json")
-		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+		req.Header.Set("Accept", cTidalAcceptHeader)
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -528,7 +523,7 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 	if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {
 		isrcURL := fmt.Sprintf("%s/tracks?filter[isrc]=%s&countryCode=%s", cTidalAPIBaseURL, isrc, countryCode)
 		req, _ := http.NewRequestWithContext(ctx, "GET", isrcURL, nil)
-		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+		req.Header.Set("Accept", cTidalAcceptHeader)
 		resp, err := client.Do(req)
 		if err == nil {
 			defer resp.Body.Close()
@@ -554,7 +549,7 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 			core.Warningf("Failed to create Tidal search request for query %q: %v", query, err)
 			continue
 		}
-		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+		req.Header.Set("Accept", cTidalAcceptHeader)
 
 		resp, err := client.Do(req)
 		if err != nil {
