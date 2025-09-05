@@ -242,24 +242,24 @@ func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.
 		return nil, core.WrappedError(err, "failed to get Tidal user info")
 	}
 
-	var allPlaylists []*myncer_pb.Playlist
-	nextURL := fmt.Sprintf("%s/userCollections/%s/relationships/playlists?countryCode=%s&include=playlists&limit=%d",
-		cTidalAPIBaseURL,
-		tidalUserID,
-		countryCode,
-		cTidalPageLimit)
+	// Use a map for deduplication
+	playlistsMap := make(map[string]*myncer_pb.Playlist)
 
-	for nextURL != "" {
-		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
+	// --- 1. Fetch playlists from user's collection (favorites/added) ---
+	collectionNextURL := fmt.Sprintf("%s/userCollections/%s/relationships/playlists?countryCode=%s&include=playlists&limit=%d",
+		cTidalAPIBaseURL, tidalUserID, countryCode, cTidalPageLimit)
+
+	for collectionNextURL != "" {
+		req, err := http.NewRequestWithContext(ctx, "GET", collectionNextURL, nil)
 		if err != nil {
 			return nil, core.WrappedError(err, "failed to create request for Tidal user collection playlists")
 		}
 		req.Header.Set("Accept", cTidalAcceptHeader)
 
-		core.Printf("Tidal: Fetching user collection playlists for user %s from URL: %s", tidalUserID, nextURL)
+		core.Printf("Tidal: Fetching user collection playlists for user %s from URL: %s", tidalUserID, collectionNextURL)
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, core.WrappedError(err, "failed to get Tidal user collection playlists from URL: %s", nextURL)
+			return nil, core.WrappedError(err, "failed to get Tidal user collection playlists from URL: %s", collectionNextURL)
 		}
 
 		body, err := io.ReadAll(resp.Body)
@@ -269,41 +269,102 @@ func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.
 		}
 		resp.Body.Close()
 
-		core.Printf("Tidal: Response from %s -> Status: %s", nextURL, resp.Status)
+		core.Printf("Tidal: Response from %s -> Status: %s", collectionNextURL, resp.Status)
 
 		if resp.StatusCode != http.StatusOK {
 			core.Errorf("Tidal API Error for user collection playlists. Status: %s, Body: %s", resp.Status, string(body))
-			return nil, core.NewError("Tidal API returned status %d for user collection playlists. Body: %s", resp.StatusCode, string(body))
+			// Continue to the next fetch type instead of failing completely
+			break
 		}
 
 		var playlistsResp UserCollectionPlaylistsResponse
 		if err := json.Unmarshal(body, &playlistsResp); err != nil {
-			return nil, core.WrappedError(err, "failed to decode Tidal user collection playlists response")
+			core.Errorf("Failed to decode Tidal user collection playlists response: %v. Body: %s", err, string(body))
+			// Continue to the next fetch type
+			break
 		}
 
 		for _, p := range playlistsResp.Included {
-			if p.Type == "playlists" {
-				allPlaylists = append(allPlaylists, &myncer_pb.Playlist{
+			if p.Type == "playlists" && playlistsMap[p.ID] == nil {
+				playlistsMap[p.ID] = &myncer_pb.Playlist{
 					MusicSource: createMusicSource(myncer_pb.Datasource_DATASOURCE_TIDAL, p.ID),
 					Name:        p.Attributes.Name,
 					Description: p.Attributes.Description,
-				})
+				}
 			}
 		}
 
 		if playlistsResp.Links.Next != "" {
-			// The API returns a relative path, so we need to prepend the base URL
-			nextURL = fmt.Sprintf("%s%s", "https://openapi.tidal.com", playlistsResp.Links.Next)
+			collectionNextURL = fmt.Sprintf("%s%s", "https://openapi.tidal.com", playlistsResp.Links.Next)
 		} else {
-			nextURL = ""
+			collectionNextURL = ""
 		}
 	}
 
-	if len(allPlaylists) == 0 {
-		core.Printf("Tidal: Found 0 playlists for user %s. This could be because the user has no playlists or because of a permission issue.", tidalUserID)
+	// --- 2. Fetch playlists owned by the user (created by them) ---
+	ownedNextURL := fmt.Sprintf("%s/playlists?filter[owners.id]=%s&countryCode=%s&limit=%d",
+		cTidalAPIBaseURL, tidalUserID, countryCode, cTidalPageLimit)
+
+	for ownedNextURL != "" {
+		req, err := http.NewRequestWithContext(ctx, "GET", ownedNextURL, nil)
+		if err != nil {
+			return nil, core.WrappedError(err, "failed to create request for Tidal owned playlists")
+		}
+		req.Header.Set("Accept", cTidalAcceptHeader)
+
+		core.Printf("Tidal: Fetching owned playlists for user %s from URL: %s", tidalUserID, ownedNextURL)
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, core.WrappedError(err, "failed to get Tidal owned playlists from URL: %s", ownedNextURL)
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			resp.Body.Close()
+			return nil, core.WrappedError(err, "failed to read response body from Tidal owned playlists")
+		}
+		resp.Body.Close()
+
+		core.Printf("Tidal: Response from %s -> Status: %s", ownedNextURL, resp.Status)
+
+		if resp.StatusCode != http.StatusOK {
+			core.Errorf("Tidal API Error for owned playlists. Status: %s, Body: %s", resp.Status, string(body))
+			// Break the loop on error but don't discard what we already have
+			break
+		}
+
+		var playlistsResp PlaylistsV2Response
+		if err := json.Unmarshal(body, &playlistsResp); err != nil {
+			core.Errorf("Failed to decode Tidal owned playlists response: %v. Body: %s", err, string(body))
+			break
+		}
+
+		for _, p := range playlistsResp.Data {
+			if p.Type == "playlists" && playlistsMap[p.ID] == nil {
+				playlistsMap[p.ID] = &myncer_pb.Playlist{
+					MusicSource: createMusicSource(myncer_pb.Datasource_DATASOURCE_TIDAL, p.ID),
+					Name:        p.Attributes.Name,
+					Description: p.Attributes.Description,
+				}
+			}
+		}
+
+		if playlistsResp.Links.Next != "" {
+			ownedNextURL = fmt.Sprintf("%s%s", "https://openapi.tidal.com", playlistsResp.Links.Next)
+		} else {
+			ownedNextURL = ""
+		}
 	}
 
-	return allPlaylists, nil
+	// Convert map back to slice
+	var finalPlaylists []*myncer_pb.Playlist
+	for _, p := range playlistsMap {
+		finalPlaylists = append(finalPlaylists, p)
+	}
+
+	core.Printf("Tidal: Found a total of %d unique playlists for user %s.", len(finalPlaylists), tidalUserID)
+
+	return finalPlaylists, nil
 }
 
 func (c *tidalClientImpl) GetPlaylist(ctx context.Context, userInfo *myncer_pb.User, playlistId string) (*myncer_pb.Playlist, error) {
@@ -344,7 +405,7 @@ func (c *tidalClientImpl) GetPlaylist(ctx context.Context, userInfo *myncer_pb.U
 	}
 
 	var playlistResp SinglePlaylistV2Response
-	if err := json.Unmarshal(body, &playlistResp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&playlistResp); err != nil {
 		return nil, core.WrappedError(err, "failed to decode single Tidal playlist response")
 	}
 
@@ -427,7 +488,7 @@ func (c *tidalClientImpl) AddToPlaylist(ctx context.Context, userInfo *myncer_pb
 		return core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
 
-	_, countryCode, err := getTidalUserInfo(ctx, client)
+	_, countryCode, err := getTidalUserInfo(ctx, userInfo)
 	if err != nil {
 		return core.WrappedError(err, "failed to get Tidal user info")
 	}
