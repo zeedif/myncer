@@ -2,6 +2,7 @@ import { Datasource } from "@/generated_grpc/myncer/datasource_pb"
 import type { Timestamp } from "@bufbuild/protobuf/wkt"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { toast } from "sonner"
 import config from "@/config"
 
 const spotifyScopes = [
@@ -18,9 +19,9 @@ const youtubeScopes = [
 ].join(" ")
 
 const tidalScopes = [
-  "r_usr",
-  "w_usr",
-  "w_sub"
+  "user.read",
+  "playlists.read",
+  "playlists.write"
 ].join(" ")
 
 // --- PKCE Helper Functions ---
@@ -73,7 +74,6 @@ export const getYoutubeAuthUrl = () => {
 
 export const getTidalAuthUrl = async (): Promise<string> => {
   const clientId = config.tidalClientId
-  // NO codificar aquí - URLSearchParams lo hará
   const redirectUri = config.tidalRedirectUri
   const scope = tidalScopes
   const state = crypto.randomUUID()
