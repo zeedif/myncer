@@ -3,6 +3,7 @@ package sync_engine
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hansbala/myncer/core"
@@ -23,19 +24,43 @@ func (s *syncEngineImpl) RunSync(
 	userInfo *myncer_pb.User, /*const*/
 	sync *myncer_pb.Sync, /*const*/
 ) error {
-	if err := s.validateSync(sync); err != nil {
-		return core.WrappedError(err, "failed to validate sync")
+	// Create the initial SyncRun object with a PENDING status.
+	syncRun := &myncer_pb.SyncRun{
+		SyncId:     sync.GetId(),
+		RunId:      uuid.NewString(),
+		SyncStatus: myncer_pb.SyncStatus_SYNC_STATUS_PENDING,
 	}
 
-	// 1. Crear el SyncRun inicial y guardarlo en la BD.
-	initialSyncRun := s.getSyncRun(sync)
-	// La función storeSyncRun ahora devuelve el objeto actualizado desde la BD.
-	currentSyncRun, err := s.storeSyncRun(ctx, initialSyncRun, true /*create*/)
+	// Use a deferred function to guarantee the final status is set, stored, and broadcast.
+	defer func() {
+		// If a panic occurs during the sync, recover and set status to FAILED.
+		if r := recover(); r != nil {
+			core.Errorf("Recovered from panic in RunSync: %v", r)
+			syncRun.SyncStatus = myncer_pb.SyncStatus_SYNC_STATUS_FAILED
+		}
+		
+		// Store and broadcast the final status.
+		if _, err := s.storeAndBroadcastSyncRun(ctx, syncRun, false); err != nil {
+			core.Errorf(core.WrappedError(err, "CRITICAL: failed to store final sync run state for run %s", syncRun.GetRunId()))
+		}
+	}()
+
+	// 1. Store and broadcast the initial PENDING status.
+	storedRun, err := s.storeAndBroadcastSyncRun(ctx, syncRun, true /* isCreate */)
 	if err != nil {
 		return core.WrappedError(err, "failed to store initial sync run")
 	}
+	syncRun = storedRun // Use the run object returned from DB (with correct timestamps)
 
-	// 2. Ejecutar la lógica de sincronización principal.
+	// 2. Update status to RUNNING, then store and broadcast.
+	syncRun.SyncStatus = myncer_pb.SyncStatus_SYNC_STATUS_RUNNING
+	storedRun, err = s.storeAndBroadcastSyncRun(ctx, syncRun, false /* isCreate */)
+	if err != nil {
+		return core.WrappedError(err, "failed to store running sync status")
+	}
+	syncRun = storedRun
+
+	// 3. Execute the main sync logic.
 	var syncErr error
 	switch v := sync.GetSyncVariant().(type) {
 	case *myncer_pb.Sync_OneWaySync:
@@ -46,45 +71,27 @@ func (s *syncEngineImpl) RunSync(
 		syncErr = core.NewError("unreachable: unknown sync variant: %T", sync.GetSyncVariant())
 	}
 
+	// 4. Determine final status based on the error. The deferred function will handle storage.
 	if syncErr != nil {
-		syncErr = core.WrappedError(syncErr, "sync execution failed")
+		syncRun.SyncStatus = myncer_pb.SyncStatus_SYNC_STATUS_FAILED
+		return core.WrappedError(syncErr, "sync execution failed")
 	}
 
-	// 3. Actualizar el estado final del SyncRun usando el objeto que obtuvimos de la BD.
-	if syncErr != nil {
-		currentSyncRun.SyncStatus = myncer_pb.SyncStatus_SYNC_STATUS_FAILED
-	} else {
-		currentSyncRun.SyncStatus = myncer_pb.SyncStatus_SYNC_STATUS_COMPLETED
-	}
-
-	// 4. Guardar y emitir el estado final.
-	if _, err := s.storeSyncRun(ctx, currentSyncRun, false /*create*/); err != nil {
-		// Si falla el guardado final, lo registramos pero devolvemos el error original de la sincronización.
-		core.Errorf(core.WrappedError(err, "critical: failed to store final sync run state"))
-	}
-	
-	// 5. Devolver el error original de la sincronización.
-	return syncErr
+	syncRun.SyncStatus = myncer_pb.SyncStatus_SYNC_STATUS_COMPLETED
+	return nil
 }
 
 
-func (s *syncEngineImpl) getSyncRun(sync *myncer_pb.Sync /*const*/) *myncer_pb.SyncRun {
-	return &myncer_pb.SyncRun{
-		SyncId:     sync.GetId(),
-		RunId:      uuid.NewString(),
-		SyncStatus: myncer_pb.SyncStatus_SYNC_STATUS_RUNNING,
-	}
-}
-
-// storeSyncRun ahora devuelve el objeto SyncRun actualizado desde la base de datos.
-func (s *syncEngineImpl) storeSyncRun(
+// storeAndBroadcastSyncRun is a helper to centralize storing and broadcasting logic.
+func (s *syncEngineImpl) storeAndBroadcastSyncRun(
 	ctx context.Context,
-	syncRun *myncer_pb.SyncRun, /*const*/
-	create bool, // if true, create a new sync run, otherwise update an existing one.
+	syncRun *myncer_pb.SyncRun,
+	isCreate bool,
 ) (*myncer_pb.SyncRun, error) {
 	myncerCtx := core.ToMyncerCtx(ctx)
 	syncRunStore := myncerCtx.DB.SyncRunStore
-	if create {
+
+	if isCreate {
 		if err := syncRunStore.CreateSyncRun(ctx, syncRun); err != nil {
 			return nil, core.WrappedError(err, "failed to create sync run in database")
 		}
@@ -94,18 +101,17 @@ func (s *syncEngineImpl) storeSyncRun(
 		}
 	}
 
-	// Después de escribir, siempre volvemos a leer para obtener los timestamps generados por la BD.
+	// Always re-fetch from the database to get the latest state, including DB-generated timestamps.
 	runs, err := syncRunStore.GetSyncs(ctx, core.NewSet(syncRun.GetRunId()), nil)
 	if err != nil || runs.IsEmpty() {
 		core.Warningf("Failed to re-fetch sync run %s after store, broadcast will use in-memory object. Error: %v", syncRun.GetRunId(), err)
-		// Fallback a emitir el objeto en memoria si la re-lectura falla.
 		myncerCtx.SyncStatusBroadcaster.Broadcast(syncRun)
 		return syncRun, nil
 	}
 	
 	refreshedSyncRun := runs.ToArray()[0]
 	
-	// Broadcast the sync run update to all subscribers.
+	core.Printf("Broadcasting status '%s' for sync run %s", refreshedSyncRun.GetSyncStatus().String(), refreshedSyncRun.GetRunId())
 	myncerCtx.SyncStatusBroadcaster.Broadcast(refreshedSyncRun)
 	
 	return refreshedSyncRun, nil

@@ -41,7 +41,7 @@ func (rs *runSyncImpl) ProcessRequest(
 	userInfo *myncer_pb.User, /*const,@nullable*/
 	reqBody *myncer_pb.RunSyncRequest, /*const*/
 ) *core.GrpcHandlerResponse[*myncer_pb.RunSyncResponse] {
-	myncerCtx := core.ToMyncerCtx(ctx) // Extraer el MyncerCtx del contexto original
+	myncerCtx := core.ToMyncerCtx(ctx)
 	sync, err := myncerCtx.DB.SyncStore.GetSync(ctx, reqBody.GetSyncId())
 	if err != nil {
 		return core.NewGrpcHandlerResponse_InternalServerError[*myncer_pb.RunSyncResponse](
@@ -49,27 +49,29 @@ func (rs *runSyncImpl) ProcessRequest(
 		)
 	}
 
-	// Iniciar la sincronización en una goroutine con un nuevo contexto.
+	// Start the sync in a background goroutine.
 	go func() {
-		// 1. Crear un nuevo contexto de fondo que no será cancelado cuando la petición HTTP termine.
+		// Create a new background context that won't be cancelled when the HTTP request ends.
 		bgCtx := context.Background()
 
-		// 2. Transferir los valores importantes del contexto original al nuevo.
+		// Carry over the essential MyncerCtx and user info to the new context.
 		bgCtx = core.WithMyncerCtx(bgCtx, myncerCtx)
 		if userInfo != nil {
 			bgCtx = auth.ContextWithUser(bgCtx, userInfo)
 		}
 
-		// 3. Ejecutar la sincronización con el nuevo contexto.
+		// Execute the sync. Errors are handled and logged within the engine.
 		if err := rs.syncEngine.RunSync(bgCtx, userInfo, sync); err != nil {
-			core.Errorf(core.WrappedError(err, "failed to run sync job"))
+			core.Errorf(core.WrappedError(err, "sync job for syncId %s failed", sync.GetId()))
 		}
 	}()
 
+	// Immediately return a PENDING status to acknowledge the request.
 	return core.NewGrpcHandlerResponse_OK(
 		&myncer_pb.RunSyncResponse{
 			SyncId:       sync.GetId(),
-			Status:       myncer_pb.SyncStatus_SYNC_STATUS_RUNNING,
+			Status:       myncer_pb.SyncStatus_SYNC_STATUS_PENDING,
+			ErrorMessage: "Sync job has been queued.",
 		},
 	)
 }
