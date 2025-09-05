@@ -75,9 +75,11 @@ func CalculateSimilarity(songA, songB core.Song) float64 {
 		Clean(artistB),
 	)
 
+	albumA := Clean(songA.GetAlbum())
+	albumB := Clean(songB.GetAlbum())
 	albumScore := normalizedLevenshtein(
-		Clean(songA.GetAlbum()),
-		Clean(songB.GetAlbum()),
+		albumA,
+		albumB,
 	)
 
 	// If the artist name doesn't match at all, it's very unlikely to be the correct song.
