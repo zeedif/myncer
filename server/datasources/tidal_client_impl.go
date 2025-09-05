@@ -690,7 +690,7 @@ func buildTidalQueries(songToSearch core.Song) []string {
 	return queries
 }
 
-func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, names core.Set[string], artistNames core.Set[string], albumNames core.Set[string]) (core.Song, error) {
+func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, songToSearch core.Song) (core.Song, error) {
 	client, err := c.getHTTPClient(ctx, userInfo)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
@@ -700,12 +700,6 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal user info")
 	}
-
-	songToSearch := sync_engine.NewSong(&myncer_pb.Song{
-		Name:       names.ToArray()[0],
-		ArtistName: artistNames.ToArray(),
-		AlbumName:  albumNames.ToArray()[0],
-	})
 
 	// 1. Try searching by ISRC first, as it's the most accurate
 	if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {
@@ -782,6 +776,12 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 			if trackResource.Type == "tracks" {
 				foundSong := buildSongFromTidalV2Track(trackResource)
 				score := matching.CalculateSimilarity(songToSearch, foundSong)
+
+				// Nuevo registro de diagnóstico añadido
+				core.Printf(
+					"Tidal Search: Query '%s' -> Found candidate: '%s' by '%s'. Score: %.2f",
+					query, foundSong.GetName(), strings.Join(foundSong.GetArtistNames(), ", "), score,
+				)
 
 				if score > highestScore {
 					highestScore = score

@@ -242,21 +242,12 @@ func buildYouTubeQueries(songToSearch core.Song) []string {
 func (s *youtubeClientImpl) Search(
 	ctx context.Context,
 	userInfo *myncer_pb.User,
-	names core.Set[string],
-	artistNames core.Set[string],
-	albumNames core.Set[string],
+	songToSearch core.Song,
 ) (core.Song, error) {
 	svc, err := s.getService(ctx, userInfo)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get YouTube service")
 	}
-
-	// Build a `core.Song` representation for the search.
-	songToSearch := sync_engine.NewSong(&myncer_pb.Song{
-		Name:       names.ToArray()[0], // Assuming a single name for simplicity
-		ArtistName: artistNames.ToArray(),
-		AlbumName:  albumNames.ToArray()[0], // Assuming a single album
-	})
 
 	// Search by metadata using multiple queries
 	queries := buildYouTubeQueries(songToSearch)

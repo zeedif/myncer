@@ -273,21 +273,12 @@ func buildSpotifyQueries(songToSearch core.Song) []string {
 func (s *spotifyClientImpl) Search(
 	ctx context.Context,
 	userInfo *myncer_pb.User,
-	names core.Set[string],
-	artistNames core.Set[string],
-	albumNames core.Set[string],
+	songToSearch core.Song,
 ) (core.Song, error) {
 	client, err := s.getClient(ctx, userInfo)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get spotify client")
 	}
-
-	// Build a `core.Song` representation for the search.
-	songToSearch := sync_engine.NewSong(&myncer_pb.Song{
-		Name:       names.ToArray()[0], // Assuming a single name for simplicity
-		ArtistName: artistNames.ToArray(),
-		AlbumName:  albumNames.ToArray()[0], // Assuming a single album
-	})
 
 	// First, if the original song has an ISRC, use it for a high-precision search.
 	if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {

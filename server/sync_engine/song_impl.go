@@ -69,9 +69,7 @@ func (s *songImpl) getSpotifyId(
 	result, err := core.ToMyncerCtx(ctx).DatasourceClients.SpotifyClient.Search(
 		ctx,
 		userInfo,
-		core.NewSet(s.GetName()),
-		core.NewSet(s.GetArtistNames()...),
-		core.NewSet(s.GetAlbum()),
+		s, // Pass the complete song object instead of individual fields
 	)
 	if err != nil {
 		return "", core.WrappedError(err, "spotify search failed for song: %s", s.GetName())
@@ -90,9 +88,7 @@ func (s *songImpl) getYoutubeId(
 	result, err := core.ToMyncerCtx(ctx).DatasourceClients.YoutubeClient.Search(
 		ctx,
 		userInfo,
-		core.NewSet(s.GetName()),
-		core.NewSet(s.GetArtistNames()...),
-		core.NewSet(s.GetAlbum()),
+		s, // Pass the complete song object instead of individual fields
 	)
 	if err != nil {
 		return "", core.WrappedError(err, "youtube search failed for song: %s", s.GetName())
@@ -111,9 +107,7 @@ func (s *songImpl) getTidalId(
 	result, err := core.ToMyncerCtx(ctx).DatasourceClients.TidalClient.Search(
 		ctx,
 		userInfo,
-		core.NewSet(s.GetName()),
-		core.NewSet(s.GetArtistNames()...),
-		core.NewSet(s.GetAlbum()),
+		s, // Pass the complete song object instead of individual fields
 	)
 	if err != nil {
 		return "", core.WrappedError(err, "tidal search failed for song: %s", s.GetName())

@@ -38,8 +38,6 @@ type DatasourceClient interface {
 	Search(
 		ctx context.Context,
 		userInfo *myncer_pb.User, /*const*/
-		names Set[string], /*const,@nullable*/ // nil, empty indicates no filtering.
-		artistNames Set[string], /*const,@nullable*/ // nil, empty indicates no filtering.
-		albumNames Set[string], /*const,@nullable*/ // nil, empty indicates no filtering.
+		songToSearch Song, /*const*/
 	) (Song, error)
 }
