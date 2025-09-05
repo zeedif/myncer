@@ -1,11 +1,23 @@
 package matching
 
 import (
+	"math"
 	"strings"
 
 	"github.com/hansbala/myncer/core"
-	"github.com/lithammer/fuzzywuzzy"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 )
+
+// normalizedLevenshtein converts an absolute Levenshtein distance into a similarity ratio from 0.0 to 100.0.
+// A score of 100.0 means the strings are identical.
+func normalizedLevenshtein(s1, s2 string) float64 {
+	distance := fuzzy.LevenshteinDistance(s1, s2)
+	maxLen := math.Max(float64(len(s1)), float64(len(s2)))
+	if maxLen == 0 {
+		return 100.0
+	}
+	return (1.0 - (float64(distance) / maxLen)) * 100.0
+}
 
 // CalculateSimilarity calculates a weighted similarity score between two songs.
 // It prioritizes an exact ISRC match and falls back to a weighted fuzzy match
@@ -19,25 +31,22 @@ func CalculateSimilarity(songA, songB core.Song) float64 {
 	}
 
 	// 2. Weighted fuzzy matching on clean metadata.
-	// Ratio is used for strings where the complete order is important (title, album).
-	titleScore := float64(fuzzywuzzy.Ratio(
+	titleScore := normalizedLevenshtein(
 		Clean(songA.GetName()),
 		Clean(songB.GetName()),
-	))
+	)
 
 	artistA := strings.Join(songA.GetArtistNames(), " ")
 	artistB := strings.Join(songB.GetArtistNames(), " ")
-
-	// TokenSetRatio is ideal for artists, as it ignores word order and duplicates.
-	artistScore := float64(fuzzywuzzy.TokenSetRatio(
+	artistScore := normalizedLevenshtein(
 		Clean(artistA),
 		Clean(artistB),
-	))
+	)
 
-	albumScore := float64(fuzzywuzzy.Ratio(
+	albumScore := normalizedLevenshtein(
 		Clean(songA.GetAlbum()),
 		Clean(songB.GetAlbum()),
-	))
+	)
 
 	// Weighting: 45% title, 45% artist, 10% album.
 	weightedScore := (titleScore*0.45) + (artistScore*0.45) + (albumScore*0.10)

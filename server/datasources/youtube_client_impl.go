@@ -370,7 +370,7 @@ func parseArtistsFromYouTubeTitle(title, channelTitle string) (string, []string)
 		}
 	}
 
-	// If there's no clear separator, we use the cleaned title as the song name
+	// If there's no clear separator, use the cleaned title as the song name
 	// and the channel name as the artist (fallback).
 	// We remove "- Topic", which YouTube adds to many artist channels.
 	artistFallback := strings.TrimSuffix(channelTitle, " - Topic")

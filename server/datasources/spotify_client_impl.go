@@ -219,17 +219,21 @@ func buildSpotifyQueries(songToSearch core.Song) []string {
 	for _, artist := range songToSearch.GetArtistNames() {
 		cleanArtists = append(cleanArtists, matching.Clean(artist))
 	}
-	cleanArtist := strings.Join(cleanArtists, " ")
+	// For Spotify, it's often better to use only the first artist in complex searches.
+	mainArtist := ""
+	if len(cleanArtists) > 0 {
+		mainArtist = cleanArtists[0]
+	}
 
 	cleanAlbum := matching.Clean(songToSearch.GetAlbum())
 
-	// Most specific: Title + Artist + Album
-	if cleanTrack != "" && cleanArtist != "" && cleanAlbum != "" {
-		queries = append(queries, fmt.Sprintf("track:\"%s\" artist:\"%s\" album:\"%s\"", cleanTrack, cleanArtist, cleanAlbum))
+	// Most specific: Title + Main Artist + Album
+	if cleanTrack != "" && mainArtist != "" && cleanAlbum != "" {
+		queries = append(queries, fmt.Sprintf("track:\"%s\" artist:\"%s\" album:\"%s\"", cleanTrack, mainArtist, cleanAlbum))
 	}
-	// Title + Artist
-	if cleanTrack != "" && cleanArtist != "" {
-		queries = append(queries, fmt.Sprintf("track:\"%s\" artist:\"%s\"", cleanTrack, cleanArtist))
+	// Title + Main Artist
+	if cleanTrack != "" && mainArtist != "" {
+		queries = append(queries, fmt.Sprintf("track:\"%s\" artist:\"%s\"", cleanTrack, mainArtist))
 	}
 	// Title + Album
 	if cleanTrack != "" && cleanAlbum != "" {
@@ -262,7 +266,7 @@ func (s *spotifyClientImpl) Search(
 		AlbumName:  albumNames.ToArray()[0], // Assuming a single album
 	})
 
-	// First, if the original song has an ISRC, we use it.
+	// First, if the original song has an ISRC, use it for a high-precision search.
 	if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {
 		query := fmt.Sprintf("isrc:%s", isrc)
 		searchResult, err := client.Search(ctx, query, spotify.SearchTypeTrack, spotify.Limit(1))
@@ -293,11 +297,15 @@ func (s *spotifyClientImpl) Search(
 					bestMatch = foundSong
 				}
 
-				// If we find a nearly perfect match, we can stop.
+				// If we find a nearly perfect match, we can stop early.
 				if highestScore > 95.0 {
 					return bestMatch, nil
 				}
 			}
+		}
+		// If we found a good candidate with a specific query, don't continue with more generic ones.
+		if highestScore > 85.0 {
+			break
 		}
 	}
 
