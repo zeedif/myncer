@@ -1,13 +1,13 @@
 package datasources
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"golang.org/x/oauth2"
 
@@ -20,132 +20,147 @@ import (
 const (
 	cTidalAuthURL    = "https://auth.tidal.com/v1/oauth2/authorize"
 	cTidalTokenURL   = "https://auth.tidal.com/v1/oauth2/token"
-	cTidalAPIBaseURL = "https://api.tidal.com/v1"
+	cTidalAPIBaseURL = "https://openapi.tidal.com/v2"
 	cTidalPageLimit  = 50
 )
 
-// TidalTrack represents a Tidal track
-type TidalTrack struct {
-	ID                   int           `json:"id"`
-	Title                string        `json:"title"`
-	Duration             int           `json:"duration"`
-	ReplayGain           float64       `json:"replayGain"`
-	Peak                 float64       `json:"peak"`
-	AllowStreaming       bool          `json:"allowStreaming"`
-	StreamReady          bool          `json:"streamReady"`
-	StreamStartDate      string        `json:"streamStartDate"`
-	PremiumStreamingOnly bool          `json:"premiumStreamingOnly"`
-	TrackNumber          int           `json:"trackNumber"`
-	VolumeNumber         int           `json:"volumeNumber"`
-	Version              string        `json:"version"`
-	Popularity           int           `json:"popularity"`
-	Copyright            string        `json:"copyright"`
-	URL                  string        `json:"url"`
-	ISRC                 string        `json:"isrc"`
-	Editable             bool          `json:"editable"`
-	Explicit             bool          `json:"explicit"`
-	AudioQuality         string        `json:"audioQuality"`
-	AudioModes           []string      `json:"audioModes"`
-	Artist               TidalArtist   `json:"artist"`
-	Artists              []TidalArtist `json:"artists"`
-	Album                TidalAlbum    `json:"album"`
+// TidalResourceIdentifier is a JSON:API resource identifier
+type TidalResourceIdentifier struct {
+	ID   string `json:"id"`
+	Type string `json:"type"`
 }
 
-// TidalArtist represents a Tidal artist
-type TidalArtist struct {
+// TidalRelationship is a JSON:API relationship
+type TidalRelationship struct {
+	Data []TidalResourceIdentifier `json:"data"`
+}
+
+// TidalTrackAttributes contains the attributes of a track
+type TidalTrackAttributes struct {
+	Title   string          `json:"title"`
+	ISRC    string          `json:"isrc"`
+	Album   TidalV2Album    `json:"album"`
+	Artists []TidalV2Artist `json:"artists"`
+}
+
+// TidalV2TrackResource is a track resource object
+type TidalV2TrackResource struct {
+	TidalResourceIdentifier
+	Attributes    TidalTrackAttributes         `json:"attributes"`
+	Relationships map[string]TidalRelationship `json:"relationships"`
+}
+
+// TidalV2Artist contains artist data
+type TidalV2Artist struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+}
+
+// TidalV2Album contains album data
+type TidalV2Album struct {
+	ID    int    `json:"id"`
+	Title string `json:"title"`
+}
+
+// PlaylistAttributes contains the attributes of a playlist
+type PlaylistAttributes struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	// Assuming there's an image-related field, though not explicit in the provided structs
+	// If the API provides image URLs, they would be added here.
+}
+
+// PlaylistResource is a playlist resource object
+type PlaylistResource struct {
+	TidalResourceIdentifier
+	Attributes PlaylistAttributes `json:"attributes"`
+}
+
+// PlaylistsV2Response is the response for a list of playlists
+type PlaylistsV2Response struct {
+	Data  []PlaylistResource `json:"data"`
+	Links struct {
+		Self string `json:"self"`
+		Next string `json:"next,omitempty"`
+	} `json:"links"`
+}
+
+// PlaylistItemsV2Response is the response for playlist items
+type PlaylistItemsV2Response struct {
+	Data     []PlaylistItemIdentifier `json:"data"`
+	Included []TidalV2TrackResource   `json:"included"`
+	Links    struct {
+		Self string `json:"self"`
+		Next string `json:"next,omitempty"`
+	} `json:"links"`
+}
+
+// PlaylistItemIdentifier includes the crucial 'itemId' for deletion
+type PlaylistItemIdentifier struct {
+	ID   string `json:"id"`
 	Type string `json:"type"`
-	URL  string `json:"url"`
+	Meta struct {
+		ItemID string `json:"itemId"`
+	} `json:"meta"`
 }
 
-// TidalAlbum represents a Tidal album
-type TidalAlbum struct {
-	ID                   int           `json:"id"`
-	Title                string        `json:"title"`
-	Duration             int           `json:"duration"`
-	StreamReady          bool          `json:"streamReady"`
-	StreamStartDate      string        `json:"streamStartDate"`
-	AllowStreaming       bool          `json:"allowStreaming"`
-	PremiumStreamingOnly bool          `json:"premiumStreamingOnly"`
-	NumberOfTracks       int           `json:"numberOfTracks"`
-	NumberOfVideos       int           `json:"numberOfVideos"`
-	NumberOfVolumes      int           `json:"numberOfVolumes"`
-	ReleaseDate          string        `json:"releaseDate"`
-	Copyright            string        `json:"copyright"`
-	Type                 string        `json:"type"`
-	Version              string        `json:"version"`
-	URL                  string        `json:"url"`
-	Cover                string        `json:"cover"`
-	VideoCover           string        `json:"videoCover"`
-	Explicit             bool          `json:"explicit"`
-	UPC                  string        `json:"upc"`
-	Popularity           int           `json:"popularity"`
-	AudioQuality         string        `json:"audioQuality"`
-	AudioModes           []string      `json:"audioModes"`
-	Artist               TidalArtist   `json:"artist"`
-	Artists              []TidalArtist `json:"artists"`
+// TidalMeResponse is the response for /users/me
+type TidalMeResponse struct {
+	Data struct {
+		ID   string `json:"id"`
+		Type string `json:"type"`
+	} `json:"data"`
 }
 
-// TidalPlaylist represents a Tidal playlist
-type TidalPlaylist struct {
-	UUID            string        `json:"uuid"`
-	Title           string        `json:"title"`
-	NumberOfTracks  int           `json:"numberOfTracks"`
-	NumberOfVideos  int           `json:"numberOfVideos"`
-	Creator         TidalUser     `json:"creator"`
-	Description     string        `json:"description"`
-	Duration        int           `json:"duration"`
-	LastUpdated     string        `json:"lastUpdated"`
-	Created         string        `json:"created"`
-	Type            string        `json:"type"`
-	PublicPlaylist  bool          `json:"publicPlaylist"`
-	URL             string        `json:"url"`
-	Image           string        `json:"image"`
-	Popularity      int           `json:"popularity"`
-	SquareImage     string        `json:"squareImage"`
-	PromotedArtists []TidalArtist `json:"promotedArtists"`
-	LastItemAddedAt string        `json:"lastItemAddedAt"`
+// SearchV2Response is the search response document
+type SearchV2Response struct {
+	Data     []TidalResourceIdentifier `json:"data"`
+	Included []TidalV2TrackResource    `json:"included"`
+	Links    struct {
+		Self string `json:"self"`
+		Next string `json:"next,omitempty"`
+	} `json:"links"`
 }
 
-// TidalUser represents a Tidal user
-type TidalUser struct {
-	ID          int    `json:"id"`
-	Username    string `json:"username"`
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	Email       string `json:"email"`
-	CountryCode string `json:"countryCode"`
-	Created     string `json:"created"`
+// SinglePlaylistV2Response is the response for getting a single playlist
+type SinglePlaylistV2Response struct {
+	Data PlaylistResource `json:"data"`
 }
 
-// TidalSearchResponse represents the Tidal search response
-type TidalSearchResponse struct {
-	Tracks TidalSearchTracks `json:"tracks"`
+// TracksV2Response is the response for getting tracks
+type TracksV2Response struct {
+	Data     []TidalV2TrackResource `json:"data"`
+	Included []TidalV2TrackResource `json:"included"`
 }
 
-// TidalSearchTracks represents the tracks in a search response
-type TidalSearchTracks struct {
-	Limit              int          `json:"limit"`
-	Offset             int          `json:"offset"`
-	TotalNumberOfItems int          `json:"totalNumberOfItems"`
-	Items              []TidalTrack `json:"items"`
-}
+// Helper function to get the numeric user ID from Tidal
+func getTidalUserID(ctx context.Context, client *http.Client) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/users/me", cTidalAPIBaseURL), nil)
+	if err != nil {
+		return "", core.WrappedError(err, "failed to create request for Tidal user ID")
+	}
+	req.Header.Set("Accept", "application/vnd.tidal.v1+json")
 
-// TidalPlaylistsResponse represents the response for playlists lists
-type TidalPlaylistsResponse struct {
-	Limit              int             `json:"limit"`
-	Offset             int             `json:"offset"`
-	TotalNumberOfItems int             `json:"totalNumberOfItems"`
-	Items              []TidalPlaylist `json:"items"`
-}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", core.WrappedError(err, "failed to get current user from Tidal")
+	}
+	defer resp.Body.Close()
 
-// TidalPlaylistTracksResponse represents the songs in a playlist
-type TidalPlaylistTracksResponse struct {
-	Limit              int          `json:"limit"`
-	Offset             int          `json:"offset"`
-	TotalNumberOfItems int          `json:"totalNumberOfItems"`
-	Items              []TidalTrack `json:"items"`
+	if resp.StatusCode != http.StatusOK {
+		return "", core.NewError("Tidal API returned status %d for /users/me", resp.StatusCode)
+	}
+
+	var userResponse TidalMeResponse
+	if err := json.NewDecoder(resp.Body).Decode(&userResponse); err != nil {
+		return "", core.WrappedError(err, "failed to decode Tidal user response")
+	}
+
+	if userResponse.Data.ID == "" {
+		return "", core.NewError("Tidal user ID not found in response")
+	}
+
+	return userResponse.Data.ID, nil
 }
 
 func NewTidalClient() core.DatasourceClient {
@@ -156,7 +171,6 @@ type tidalClientImpl struct{}
 
 var _ core.DatasourceClient = (*tidalClientImpl)(nil)
 
-// getOAuthConfig creates the OAuth2 configuration for Tidal
 func (c *tidalClientImpl) getOAuthConfig(ctx context.Context) *oauth2.Config {
 	tidalCfg := core.ToMyncerCtx(ctx).Config.TidalConfig
 	return &oauth2.Config{
@@ -167,18 +181,15 @@ func (c *tidalClientImpl) getOAuthConfig(ctx context.Context) *oauth2.Config {
 			AuthURL:  cTidalAuthURL,
 			TokenURL: cTidalTokenURL,
 		},
-		Scopes: []string{"r_usr", "w_usr", "w_sub"},
+		Scopes: []string{"user.read", "playlists.read", "playlists.write"},
 	}
 }
 
-// ExchangeCodeForToken exchanges the authorization code for a token
 func (c *tidalClientImpl) ExchangeCodeForToken(ctx context.Context, authCode string, codeVerifier string) (*oauth2.Token, error) {
 	conf := c.getOAuthConfig(ctx)
-
 	opts := []oauth2.AuthCodeOption{
 		oauth2.SetAuthURLParam("code_verifier", codeVerifier),
 	}
-
 	token, err := conf.Exchange(ctx, authCode, opts...)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to exchange auth code with Tidal")
@@ -186,68 +197,84 @@ func (c *tidalClientImpl) ExchangeCodeForToken(ctx context.Context, authCode str
 	return token, nil
 }
 
-// GetPlaylists gets the user's playlists
 func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.User) ([]*myncer_pb.Playlist, error) {
 	client, err := c.getHTTPClient(ctx, userInfo)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
 
-	r := []*myncer_pb.Playlist{}
-	offset := 0
+	tidalUserID, err := getTidalUserID(ctx, client)
+	if err != nil {
+		return nil, core.WrappedError(err, "failed to get Tidal user ID")
+	}
 
-	for {
-		url := fmt.Sprintf("%s/users/%s/playlists?limit=%d&offset=%d",
-			cTidalAPIBaseURL,
-			userInfo.GetId(), // This might need the user's Tidal ID
-			cTidalPageLimit,
-			offset)
+	var allPlaylists []*myncer_pb.Playlist
+	countryCode := "US" // As per API, countryCode is required. Defaulting to US.
 
-		resp, err := client.Get(url)
+	nextURL := fmt.Sprintf("%s/playlists?filter[owners.id]=%s&countryCode=%s&limit=%d",
+		cTidalAPIBaseURL,
+		tidalUserID,
+		countryCode,
+		cTidalPageLimit)
+
+	for nextURL != "" {
+		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
 		if err != nil {
-			return nil, core.WrappedError(err, "failed to get Tidal playlists at offset %d", offset)
+			return nil, core.WrappedError(err, "failed to create request for Tidal playlists")
 		}
-		defer resp.Body.Close()
+		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, core.WrappedError(err, "failed to get Tidal playlists from URL: %s", nextURL)
+		}
 
 		if resp.StatusCode != http.StatusOK {
-			return nil, core.NewError("Tidal API returned status %d", resp.StatusCode)
+			resp.Body.Close()
+			return nil, core.NewError("Tidal API returned status %d for playlists", resp.StatusCode)
 		}
 
-		var playlistsResp TidalPlaylistsResponse
+		var playlistsResp PlaylistsV2Response
 		if err := json.NewDecoder(resp.Body).Decode(&playlistsResp); err != nil {
-			return nil, core.WrappedError(err, "failed to decode Tidal playlists response")
+			resp.Body.Close()
+			return nil, core.WrappedError(err, "failed to decode Tidal v2 playlists response")
 		}
+		resp.Body.Close()
 
-		for _, p := range playlistsResp.Items {
-			r = append(r, &myncer_pb.Playlist{
-				MusicSource: createMusicSource(
-					myncer_pb.Datasource_DATASOURCE_TIDAL,
-					p.UUID,
-				),
-				Name:        p.Title,
-				Description: p.Description,
-				ImageUrl:    p.Image,
+		for _, p := range playlistsResp.Data {
+			allPlaylists = append(allPlaylists, &myncer_pb.Playlist{
+				MusicSource: createMusicSource(myncer_pb.Datasource_DATASOURCE_TIDAL, p.ID),
+				Name:        p.Attributes.Name,
+				Description: p.Attributes.Description,
 			})
 		}
 
-		if len(playlistsResp.Items) < cTidalPageLimit {
-			break
+		if playlistsResp.Links.Next != "" {
+			// The `next` link is a relative path, so we construct the full URL.
+			nextURL = fmt.Sprintf("%s%s", "https://openapi.tidal.com", playlistsResp.Links.Next)
+		} else {
+			nextURL = ""
 		}
-		offset += cTidalPageLimit
 	}
 
-	return r, nil
+	return allPlaylists, nil
 }
 
-// GetPlaylist gets a specific playlist
 func (c *tidalClientImpl) GetPlaylist(ctx context.Context, userInfo *myncer_pb.User, playlistId string) (*myncer_pb.Playlist, error) {
 	client, err := c.getHTTPClient(ctx, userInfo)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
+	countryCode := "US"
 
-	url := fmt.Sprintf("%s/playlists/%s", cTidalAPIBaseURL, playlistId)
-	resp, err := client.Get(url)
+	url := fmt.Sprintf("%s/playlists/%s?countryCode=%s", cTidalAPIBaseURL, playlistId, countryCode)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, core.WrappedError(err, "failed to create request for Tidal playlist")
+	}
+	req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal playlist %s", playlistId)
 	}
@@ -257,251 +284,294 @@ func (c *tidalClientImpl) GetPlaylist(ctx context.Context, userInfo *myncer_pb.U
 		return nil, core.NewError("Tidal API returned status %d for playlist %s", resp.StatusCode, playlistId)
 	}
 
-	var playlist TidalPlaylist
-	if err := json.NewDecoder(resp.Body).Decode(&playlist); err != nil {
-		return nil, core.WrappedError(err, "failed to decode Tidal playlist response")
+	var playlistResp SinglePlaylistV2Response
+	if err := json.NewDecoder(resp.Body).Decode(&playlistResp); err != nil {
+		return nil, core.WrappedError(err, "failed to decode single Tidal playlist response")
 	}
 
+	p := playlistResp.Data
 	return &myncer_pb.Playlist{
-		MusicSource: createMusicSource(
-			myncer_pb.Datasource_DATASOURCE_TIDAL,
-			playlist.UUID,
-		),
-		Name:        playlist.Title,
-		Description: playlist.Description,
-		ImageUrl:    playlist.Image,
+		MusicSource: createMusicSource(myncer_pb.Datasource_DATASOURCE_TIDAL, p.ID),
+		Name:        p.Attributes.Name,
+		Description: p.Attributes.Description,
 	}, nil
 }
 
-// GetPlaylistSongs gets the songs from a playlist
 func (c *tidalClientImpl) GetPlaylistSongs(ctx context.Context, userInfo *myncer_pb.User, playlistId string) ([]core.Song, error) {
 	client, err := c.getHTTPClient(ctx, userInfo)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
 
-	allSongs := []core.Song{}
-	offset := 0
+	var allSongs []core.Song
+	countryCode := "US"
 
-	for {
-		url := fmt.Sprintf("%s/playlists/%s/tracks?limit=%d&offset=%d",
-			cTidalAPIBaseURL,
-			playlistId,
-			cTidalPageLimit,
-			offset)
+	nextURL := fmt.Sprintf("%s/playlists/%s/relationships/items?countryCode=%s&include=items&limit=%d",
+		cTidalAPIBaseURL,
+		playlistId,
+		countryCode,
+		cTidalPageLimit)
 
-		resp, err := client.Get(url)
+	for nextURL != "" {
+		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
 		if err != nil {
-			return nil, core.WrappedError(err, "failed to get Tidal playlist tracks at offset %d", offset)
+			return nil, core.WrappedError(err, "failed to create request for Tidal playlist items")
 		}
-		defer resp.Body.Close()
+		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, core.WrappedError(err, "failed to get Tidal playlist items from URL: %s", nextURL)
+		}
 
 		if resp.StatusCode != http.StatusOK {
-			return nil, core.NewError("Tidal API returned status %d", resp.StatusCode)
+			resp.Body.Close()
+			return nil, core.NewError("Tidal API returned status %d for playlist items", resp.StatusCode)
 		}
 
-		var tracksResp TidalPlaylistTracksResponse
-		if err := json.NewDecoder(resp.Body).Decode(&tracksResp); err != nil {
-			return nil, core.WrappedError(err, "failed to decode Tidal playlist tracks response")
+		var itemsResp PlaylistItemsV2Response
+		if err := json.NewDecoder(resp.Body).Decode(&itemsResp); err != nil {
+			resp.Body.Close()
+			return nil, core.WrappedError(err, "failed to decode Tidal v2 playlist items response")
+		}
+		resp.Body.Close()
+
+		for _, trackResource := range itemsResp.Included {
+			if trackResource.Type == "tracks" {
+				allSongs = append(allSongs, buildSongFromTidalV2Track(trackResource))
+			}
 		}
 
-		for _, track := range tracksResp.Items {
-			allSongs = append(allSongs, buildSongFromTidalTrack(track))
+		if itemsResp.Links.Next != "" {
+			nextURL = fmt.Sprintf("%s%s", "https://openapi.tidal.com", itemsResp.Links.Next)
+		} else {
+			nextURL = ""
 		}
-
-		if len(tracksResp.Items) < cTidalPageLimit {
-			break
-		}
-		offset += cTidalPageLimit
 	}
-
 	return allSongs, nil
 }
 
-// AddToPlaylist adds songs to a playlist
 func (c *tidalClientImpl) AddToPlaylist(ctx context.Context, userInfo *myncer_pb.User, playlistId string, songs []core.Song) error {
 	client, err := c.getHTTPClient(ctx, userInfo)
 	if err != nil {
 		return core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
+	countryCode := "US"
 
-	trackIds := []string{}
+	var resourceIdentifiers []TidalResourceIdentifier
 	for _, song := range songs {
-		trackIds = append(trackIds, song.GetId())
+		resourceIdentifiers = append(resourceIdentifiers, TidalResourceIdentifier{ID: song.GetId(), Type: "tracks"})
 	}
 
-	// Tidal API might require a specific format to add tracks
-	data := url.Values{}
-	data.Set("trackIds", strings.Join(trackIds, ","))
+	// The API adds items in batches of max 20.
+	for i := 0; i < len(resourceIdentifiers); i += 20 {
+		end := i + 20
+		if end > len(resourceIdentifiers) {
+			end = len(resourceIdentifiers)
+		}
+		batch := resourceIdentifiers[i:end]
 
-	url := fmt.Sprintf("%s/playlists/%s/tracks", cTidalAPIBaseURL, playlistId)
-	resp, err := client.PostForm(url, data)
-	if err != nil {
-		return core.WrappedError(err, "failed to add tracks to Tidal playlist %s", playlistId)
-	}
-	defer resp.Body.Close()
+		payload := map[string][]TidalResourceIdentifier{"data": batch}
+		payloadBytes, err := json.Marshal(payload)
+		if err != nil {
+			return core.WrappedError(err, "failed to marshal add tracks payload")
+		}
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return core.NewError("Tidal API returned status %d when adding tracks", resp.StatusCode)
+		url := fmt.Sprintf("%s/playlists/%s/relationships/items?countryCode=%s", cTidalAPIBaseURL, playlistId, countryCode)
+		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(payloadBytes))
+		if err != nil {
+			return core.WrappedError(err, "failed to create add tracks request")
+		}
+		req.Header.Set("Content-Type", "application/vnd.api+json")
+		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return core.WrappedError(err, "failed to add tracks to Tidal playlist %s", playlistId)
+		}
+		resp.Body.Close() // Close body immediately after checking status
+
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return core.NewError("Tidal API returned status %d when adding tracks", resp.StatusCode)
+		}
 	}
 
 	return nil
 }
 
-// ClearPlaylist removes all songs from a playlist
 func (c *tidalClientImpl) ClearPlaylist(ctx context.Context, userInfo *myncer_pb.User, playlistId string) error {
-	// First, we get all the songs
-	songs, err := c.GetPlaylistSongs(ctx, userInfo, playlistId)
-	if err != nil {
-		return core.WrappedError(err, "failed to get playlist songs for clearing")
-	}
-
-	if len(songs) == 0 {
-		return nil
-	}
-
 	client, err := c.getHTTPClient(ctx, userInfo)
 	if err != nil {
 		return core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
 
-	// We delete all the songs
-	trackIds := []string{}
-	for _, song := range songs {
-		trackIds = append(trackIds, song.GetId())
+	// Fetch all item identifiers with their unique itemId for deletion.
+	var itemsToRemove []PlaylistItemIdentifier
+	nextURL := fmt.Sprintf("%s/playlists/%s/relationships/items", cTidalAPIBaseURL, playlistId)
+
+	for nextURL != "" {
+		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
+		if err != nil {
+			return core.WrappedError(err, "failed to create request to get playlist items for deletion")
+		}
+		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+		resp, err := client.Do(req)
+		if err != nil {
+			return core.WrappedError(err, "failed to get playlist items for deletion")
+		}
+
+		var itemsResp PlaylistItemsV2Response
+		if err := json.NewDecoder(resp.Body).Decode(&itemsResp); err != nil {
+			resp.Body.Close()
+			return core.WrappedError(err, "failed to decode playlist items for deletion")
+		}
+		resp.Body.Close()
+
+		itemsToRemove = append(itemsToRemove, itemsResp.Data...)
+
+		if itemsResp.Links.Next != "" {
+			nextURL = fmt.Sprintf("%s%s", "https://openapi.tidal.com", itemsResp.Links.Next)
+		} else {
+			nextURL = ""
+		}
 	}
 
-	data := url.Values{}
-	data.Set("trackIds", strings.Join(trackIds, ","))
-
-	url := fmt.Sprintf("%s/playlists/%s/tracks", cTidalAPIBaseURL, playlistId)
-	req, err := http.NewRequestWithContext(ctx, "DELETE", url, strings.NewReader(data.Encode()))
-	if err != nil {
-		return core.WrappedError(err, "failed to create delete request")
+	if len(itemsToRemove) == 0 {
+		return nil // Nothing to clear
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return core.WrappedError(err, "failed to clear Tidal playlist %s", playlistId)
-	}
-	defer resp.Body.Close()
+	// Delete items in batches of 20
+	for i := 0; i < len(itemsToRemove); i += 20 {
+		end := i + 20
+		if end > len(itemsToRemove) {
+			end = len(itemsToRemove)
+		}
+		batch := itemsToRemove[i:end]
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return core.NewError("Tidal API returned status %d when clearing playlist", resp.StatusCode)
+		payload := map[string][]PlaylistItemIdentifier{"data": batch}
+		payloadBytes, err := json.Marshal(payload)
+		if err != nil {
+			return core.WrappedError(err, "failed to marshal delete payload")
+		}
+
+		deleteURL := fmt.Sprintf("%s/playlists/%s/relationships/items", cTidalAPIBaseURL, playlistId)
+		req, err := http.NewRequestWithContext(ctx, "DELETE", deleteURL, bytes.NewBuffer(payloadBytes))
+		if err != nil {
+			return core.WrappedError(err, "failed to create delete request")
+		}
+		req.Header.Set("Content-Type", "application/vnd.api+json")
+		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return core.WrappedError(err, "failed to clear batch from playlist")
+		}
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusNoContent {
+			return core.NewError("Tidal API returned status %d when clearing playlist", resp.StatusCode)
+		}
 	}
 
 	return nil
 }
 
-// buildTidalQueries builds search queries for Tidal
 func buildTidalQueries(songToSearch core.Song) []string {
 	queries := []string{}
 	cleanTrack := matching.Clean(songToSearch.GetName())
+	cleanArtistsStr := strings.Join(songToSearch.GetArtistNames(), " ")
+	cleanArtist := matching.Clean(cleanArtistsStr)
 
-	cleanArtists := []string{}
-	for _, artist := range songToSearch.GetArtistNames() {
-		cleanArtists = append(cleanArtists, matching.Clean(artist))
-	}
-	cleanArtist := strings.Join(cleanArtists, " ")
-
-	cleanAlbum := matching.Clean(songToSearch.GetAlbum())
-
-	// Queries from most specific to most general
-	if cleanTrack != "" && cleanArtist != "" && cleanAlbum != "" {
-		queries = append(queries, fmt.Sprintf("%s %s %s", cleanTrack, cleanArtist, cleanAlbum))
-	}
+	// V2 API seems to perform better with simpler queries
 	if cleanTrack != "" && cleanArtist != "" {
-		queries = append(queries, fmt.Sprintf("%s %s", cleanTrack, cleanArtist))
-	}
-	if cleanTrack != "" && cleanAlbum != "" {
-		queries = append(queries, fmt.Sprintf("%s %s", cleanTrack, cleanAlbum))
+		queries = append(queries, fmt.Sprintf("%s %s", cleanArtist, cleanTrack))
 	}
 	if cleanTrack != "" {
 		queries = append(queries, cleanTrack)
 	}
-
 	return queries
 }
 
-// Search searches for a song on Tidal
-func (c *tidalClientImpl) Search(
-	ctx context.Context,
-	userInfo *myncer_pb.User,
-	names core.Set[string],
-	artistNames core.Set[string],
-	albumNames core.Set[string],
-) (core.Song, error) {
+func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, names core.Set[string], artistNames core.Set[string], albumNames core.Set[string]) (core.Song, error) {
 	client, err := c.getHTTPClient(ctx, userInfo)
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
+	countryCode := "US"
 
-	// Build song for searching
 	songToSearch := sync_engine.NewSong(&myncer_pb.Song{
 		Name:       names.ToArray()[0],
 		ArtistName: artistNames.ToArray(),
 		AlbumName:  albumNames.ToArray()[0],
 	})
 
-	// First, try searching by ISRC if available
+	// 1. Try searching by ISRC first, as it's the most accurate
 	if isrc := songToSearch.GetSpec().GetIsrc(); isrc != "" {
-		searchURL := fmt.Sprintf("%s/search/tracks?query=isrc:%s&limit=1", cTidalAPIBaseURL, isrc)
-		resp, err := client.Get(searchURL)
-		if err == nil {
-			defer resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
-				var searchResp TidalSearchResponse
-				if err := json.NewDecoder(resp.Body).Decode(&searchResp); err == nil {
-					if len(searchResp.Tracks.Items) > 0 {
-						return buildSongFromTidalTrack(searchResp.Tracks.Items[0]), nil
-					}
-				}
+		isrcURL := fmt.Sprintf("%s/tracks?filter[isrc]=%s&countryCode=%s", cTidalAPIBaseURL, isrc, countryCode)
+		req, _ := http.NewRequestWithContext(ctx, "GET", isrcURL, nil)
+		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
+		resp, err := client.Do(req)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			var tracksResp TracksV2Response
+			if err := json.NewDecoder(resp.Body).Decode(&tracksResp); err == nil && len(tracksResp.Data) > 0 {
+				resp.Body.Close()
+				return buildSongFromTidalV2Track(tracksResp.Data[0]), nil
 			}
+			resp.Body.Close()
 		}
 	}
 
-	// Search by metadata
+	// 2. Fallback to metadata search
 	queries := buildTidalQueries(songToSearch)
 	var bestMatch core.Song
 	highestScore := 0.0
 
 	for _, query := range queries {
-		searchURL := fmt.Sprintf("%s/search/tracks?query=%s&limit=5",
-			cTidalAPIBaseURL,
-			url.QueryEscape(query))
+		searchURL := fmt.Sprintf("%s/searchResults/%s/relationships/tracks?countryCode=%s&include=tracks&limit=5",
+			cTidalAPIBaseURL, url.QueryEscape(query), countryCode)
+		req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
+		if err != nil {
+			core.Warningf("Failed to create Tidal search request for query %q: %v", query, err)
+			continue
+		}
+		req.Header.Set("Accept", "application/vnd.tidal.v1+json")
 
-		resp, err := client.Get(searchURL)
+		resp, err := client.Do(req)
 		if err != nil {
 			core.Warningf("Tidal search failed for query %q, trying next. Error: %v", query, err)
 			continue
 		}
-		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			core.Warningf("Tidal search returned status %d for query %q", resp.StatusCode, query)
+			resp.Body.Close()
 			continue
 		}
 
-		var searchResp TidalSearchResponse
+		var searchResp SearchV2Response
 		if err := json.NewDecoder(resp.Body).Decode(&searchResp); err != nil {
 			core.Warningf("Failed to decode Tidal search response for query %q: %v", query, err)
+			resp.Body.Close()
 			continue
 		}
+		resp.Body.Close()
 
-		for _, track := range searchResp.Tracks.Items {
-			foundSong := buildSongFromTidalTrack(track)
-			score := matching.CalculateSimilarity(songToSearch, foundSong)
+		for _, trackResource := range searchResp.Included {
+			if trackResource.Type == "tracks" {
+				foundSong := buildSongFromTidalV2Track(trackResource)
+				score := matching.CalculateSimilarity(songToSearch, foundSong)
 
-			if score > highestScore {
-				highestScore = score
-				bestMatch = foundSong
+				if score > highestScore {
+					highestScore = score
+					bestMatch = foundSong
+				}
+				if highestScore > 95.0 {
+					return bestMatch, nil
+				}
 			}
-
-			// If we find an almost perfect match, we can stop
-			if highestScore > 95.0 {
-				return bestMatch, nil
-			}
+		}
+		if highestScore > 85.0 {
+			break
 		}
 	}
 
@@ -527,18 +597,49 @@ func (c *tidalClientImpl) getHTTPClient(ctx context.Context, userInfo *myncer_pb
 	return oauth2.NewClient(ctx, tokenSource), nil
 }
 
-// buildSongFromTidalTrack converts a Tidal track to a core.Song
-func buildSongFromTidalTrack(track TidalTrack) core.Song {
+// buildSongFromTidalV2Track converts a v2 track resource to core.Song
+func buildSongFromTidalV2Track(trackResource TidalV2TrackResource) core.Song {
+	artists := []string{}
+	for _, artist := range trackResource.Attributes.Artists {
+		artists = append(artists, artist.Name)
+	}
+	// The track ID from the API can be a string, but our internal representation for other datasources might be an int.
+	// We'll keep it as a string as per the JSON:API spec.
+	trackID := trackResource.ID
+
+	return sync_engine.NewSong(&myncer_pb.Song{
+		Name:             trackResource.Attributes.Title,
+		ArtistName:       artists,
+		AlbumName:        trackResource.Attributes.Album.Title,
+		Datasource:       myncer_pb.Datasource_DATASOURCE_TIDAL,
+		DatasourceSongId: trackID,
+		Isrc:             trackResource.Attributes.ISRC,
+	})
+}
+
+// Legacy build function (kept for reference, but should be removed)
+// Deprecated: Use buildSongFromTidalV2Track instead.
+func buildSongFromTidalTrack(track struct {
+	ID      int
+	Title   string
+	Artists []struct {
+		Name string
+	}
+	Artist struct {
+		Name string
+	}
+	Album struct {
+		Title string
+	}
+	ISRC string
+}) core.Song {
 	artists := []string{}
 	for _, artist := range track.Artists {
 		artists = append(artists, artist.Name)
 	}
-
-	// If there are no artists in the array, use the main artist
 	if len(artists) == 0 && track.Artist.Name != "" {
 		artists = append(artists, track.Artist.Name)
 	}
-
 	return sync_engine.NewSong(&myncer_pb.Song{
 		Name:             track.Title,
 		ArtistName:       artists,
