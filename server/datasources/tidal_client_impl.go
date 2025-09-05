@@ -106,12 +106,21 @@ type PlaylistItemIdentifier struct {
 	} `json:"meta"`
 }
 
+// TidalUserAttributes contains user attributes including country
+type TidalUserAttributes struct {
+	Country string `json:"country"`
+}
+
+// TidalMeData contains user data with attributes
+type TidalMeData struct {
+	ID         string              `json:"id"`
+	Type       string              `json:"type"`
+	Attributes TidalUserAttributes `json:"attributes"`
+}
+
 // TidalMeResponse is the response for /users/me
 type TidalMeResponse struct {
-	Data struct {
-		ID   string `json:"id"`
-		Type string `json:"type"`
-	} `json:"data"`
+	Data TidalMeData `json:"data"`
 }
 
 // SearchV2Response is the search response document
@@ -135,35 +144,39 @@ type TracksV2Response struct {
 	Included []TidalV2TrackResource `json:"included"`
 }
 
-// Helper function to get the numeric user ID from Tidal
-func getTidalUserID(ctx context.Context, client *http.Client) (string, error) {
+// Helper function to get the user ID and country code from Tidal
+func getTidalUserInfo(ctx context.Context, client *http.Client) (string, string, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/users/me", cTidalAPIBaseURL), nil)
 	if err != nil {
-		return "", core.WrappedError(err, "failed to create request for Tidal user ID")
+		return "", "", core.WrappedError(err, "failed to create request for Tidal user info")
 	}
 	req.Header.Set("Accept", cTidalAcceptHeader)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", core.WrappedError(err, "failed to get current user from Tidal")
+		return "", "", core.WrappedError(err, "failed to get current user from Tidal")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return "", core.NewError("Tidal API returned status %d for /users/me. Body: %s", resp.StatusCode, string(body))
+		return "", "", core.NewError("Tidal API returned status %d for /users/me. Body: %s", resp.StatusCode, string(body))
 	}
 
 	var userResponse TidalMeResponse
 	if err := json.NewDecoder(resp.Body).Decode(&userResponse); err != nil {
-		return "", core.WrappedError(err, "failed to decode Tidal user response")
+		return "", "", core.WrappedError(err, "failed to decode Tidal user response")
 	}
 
 	if userResponse.Data.ID == "" {
-		return "", core.NewError("Tidal user ID not found in response")
+		return "", "", core.NewError("Tidal user ID not found in response")
+	}
+	
+	if userResponse.Data.Attributes.Country == "" {
+		return "", "", core.NewError("Tidal user country code not found in response")
 	}
 
-	return userResponse.Data.ID, nil
+	return userResponse.Data.ID, userResponse.Data.Attributes.Country, nil
 }
 
 func NewTidalClient() core.DatasourceClient {
@@ -206,13 +219,12 @@ func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
 
-	tidalUserID, err := getTidalUserID(ctx, client)
+	tidalUserID, countryCode, err := getTidalUserInfo(ctx, client)
 	if err != nil {
-		return nil, core.WrappedError(err, "failed to get Tidal user ID")
+		return nil, core.WrappedError(err, "failed to get Tidal user info")
 	}
 
 	var allPlaylists []*myncer_pb.Playlist
-	countryCode := "US" // As per API, countryCode is required. Defaulting to US.
 
 	nextURL := fmt.Sprintf("%s/playlists?filter[owners.id]=%s&countryCode=%s&limit=%d",
 		cTidalAPIBaseURL,
@@ -269,7 +281,11 @@ func (c *tidalClientImpl) GetPlaylist(ctx context.Context, userInfo *myncer_pb.U
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
-	countryCode := "US"
+	
+	_, countryCode, err := getTidalUserInfo(ctx, client)
+	if err != nil {
+		return nil, core.WrappedError(err, "failed to get Tidal user info")
+	}
 
 	url := fmt.Sprintf("%s/playlists/%s?countryCode=%s", cTidalAPIBaseURL, playlistId, countryCode)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -309,7 +325,10 @@ func (c *tidalClientImpl) GetPlaylistSongs(ctx context.Context, userInfo *myncer
 	}
 
 	var allSongs []core.Song
-	countryCode := "US"
+	_, countryCode, err := getTidalUserInfo(ctx, client)
+	if err != nil {
+		return nil, core.WrappedError(err, "failed to get Tidal user info")
+	}
 
 	nextURL := fmt.Sprintf("%s/playlists/%s/relationships/items?countryCode=%s&include=items&limit=%d",
 		cTidalAPIBaseURL,
@@ -362,7 +381,11 @@ func (c *tidalClientImpl) AddToPlaylist(ctx context.Context, userInfo *myncer_pb
 	if err != nil {
 		return core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
-	countryCode := "US"
+	
+	_, countryCode, err := getTidalUserInfo(ctx, client)
+	if err != nil {
+		return core.WrappedError(err, "failed to get Tidal user info")
+	}
 
 	var resourceIdentifiers []TidalResourceIdentifier
 	for _, song := range songs {
@@ -511,7 +534,11 @@ func (c *tidalClientImpl) Search(ctx context.Context, userInfo *myncer_pb.User, 
 	if err != nil {
 		return nil, core.WrappedError(err, "failed to get Tidal HTTP client")
 	}
-	countryCode := "US"
+	
+	_, countryCode, err := getTidalUserInfo(ctx, client)
+	if err != nil {
+		return nil, core.WrappedError(err, "failed to get Tidal user info")
+	}
 
 	songToSearch := sync_engine.NewSong(&myncer_pb.Song{
 		Name:       names.ToArray()[0],
