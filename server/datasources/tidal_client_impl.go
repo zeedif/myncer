@@ -453,7 +453,7 @@ func (c *tidalClientImpl) GetPlaylists(ctx context.Context, userInfo *myncer_pb.
 		finalPlaylists = append(finalPlaylists, p)
 	}
 
-	core.Printf("Tidal: Found a total of %d unique playlists for user %s.", len(finalPlaylists), tidalUserID)
+	core.Printf("Tidal: Found a total of %d unique playlists for user %s.", len(finalPlaylists), c.tidalUserID)
 
 	return finalPlaylists, nil
 }
