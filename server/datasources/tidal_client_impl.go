@@ -220,13 +220,12 @@ func (c *tidalClientImpl) ensureUserInfo(ctx context.Context, userInfo *myncer_p
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// Si ya está configurado para esta operación, no hacer nada
 	if c.httpClient != nil {
 		return nil
 	}
 
-	// 1. Obtener token de la base de datos
-	oAuthToken, err := core.ToMyncerCtx(ctx).DB.DatasourceTokenStore.GetToken(
+	myncerCtx := core.ToMyncerCtx(ctx)
+	oAuthToken, err := myncerCtx.DB.DatasourceTokenStore.GetToken(
 		ctx,
 		userInfo.GetId(),
 		myncer_pb.Datasource_DATASOURCE_TIDAL,
@@ -235,11 +234,9 @@ func (c *tidalClientImpl) ensureUserInfo(ctx context.Context, userInfo *myncer_p
 		return core.WrappedError(err, "failed to get Tidal token for user %s", userInfo.GetId())
 	}
 
-	// 2. Crear cliente HTTP autenticado
 	tokenSource := c.getOAuthConfig(ctx).TokenSource(ctx, core.ProtoOAuthTokenToOAuth2(oAuthToken))
 	c.httpClient = oauth2.NewClient(ctx, tokenSource)
 
-	// 3. Comprobar si tenemos información del usuario en caché
 	if oAuthToken.GetDatasourceUserId() != "" && oAuthToken.GetDatasourceUserCountryCode() != "" {
 		c.tidalUserID = oAuthToken.GetDatasourceUserId()
 		c.tidalCountryCode = oAuthToken.GetDatasourceUserCountryCode()
@@ -247,14 +244,19 @@ func (c *tidalClientImpl) ensureUserInfo(ctx context.Context, userInfo *myncer_p
 		return nil
 	}
 
-	// 4. Si no hay caché, obtener información del usuario desde la API
 	core.Printf("Tidal: No cached user info found. Fetching from API...")
-	
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/users/me", cTidalAPIBaseURL), nil)
+
+	req, err := http.NewRequestWithContext(context.Background(), "GET", fmt.Sprintf("%s/users/me", cTidalAPIBaseURL), nil)
 	if err != nil {
 		return core.WrappedError(err, "failed to create request for Tidal user info")
 	}
 	req.Header.Set("Accept", cTidalAcceptHeader)
+
+	if c.httpClient.Transport != nil {
+		if token, err := tokenSource.Token(); err == nil {
+			token.SetAuthHeader(req)
+		}
+	}
 
 	core.Printf("Tidal: Fetching user info from %s", req.URL)
 	resp, err := c.httpClient.Do(req)
@@ -284,18 +286,15 @@ func (c *tidalClientImpl) ensureUserInfo(ctx context.Context, userInfo *myncer_p
 		return core.NewError("Tidal user ID or country code not found in response")
 	}
 
-	// 5. Actualizar el token con la información del usuario y guardarlo en la BD
 	oAuthToken.DatasourceUserId = userResponse.Data.ID
 	oAuthToken.DatasourceUserCountryCode = userResponse.Data.Attributes.Country
-	
-	if err := core.ToMyncerCtx(ctx).DB.DatasourceTokenStore.UpdateToken(ctx, oAuthToken); err != nil {
+
+	if err := myncerCtx.DB.DatasourceTokenStore.UpdateToken(ctx, oAuthToken); err != nil {
 		core.Warningf("Failed to update token with user info in database: %v", err)
-		// No devolvemos error aquí porque la operación principal aún puede continuar
 	} else {
 		core.Printf("Tidal: Cached user info in database for future operations")
 	}
 
-	// 6. Configurar campos para la operación actual
 	c.tidalUserID = userResponse.Data.ID
 	c.tidalCountryCode = userResponse.Data.Attributes.Country
 
